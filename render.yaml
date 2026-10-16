@@ -1,0 +1,27 @@
+# Render 블루프린트: Render 대시보드 → New → Blueprint → 이 저장소 선택
+services:
+  - type: web
+    name: chakgong-onestop
+    runtime: node
+    plan: starter            # 저장 디스크를 쓰려면 유료 요금제 필요
+    region: singapore        # 한국과 가장 가까운 지역
+    buildCommand: npm ci --omit=dev
+    startCommand: node server.js
+    healthCheckPath: /login
+    disk:
+      name: chakgong-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: DATA_DIR
+        value: /var/data
+      - key: TRUST_PROXY
+        value: "1"
+      - key: COOKIE_SECURE
+        value: "1"
+      - key: ADMIN_EMAIL
+        sync: false          # 배포할 때 화면에서 직접 입력
+      - key: ADMIN_PASSWORD
+        sync: false

@@ -1,0 +1,1173 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>*,*::before,*::after{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;font-family:system-ui,sans-serif;font-size:14px}img{max-width:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+</head><body>
+<title>착공계 원스톱</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Gothic:wght@400;700&display=swap">
+<style>
+/* Layout: 상단 프로젝트 바 + 좌측 입력 패널(탭) + 우측 A4 미리보기 책상 */
+:root{
+  --bg:#e9edf1; --panel:#ffffff; --ink:#17202a; --muted:#5b6876; --line:#d3dae2; --field:#f6f8fa;
+  --accent:#1d4f8c; --accent-soft:#e3ecf7; --stamp:#c0392b; --ok:#2d7a4c; --warn:#a86400; --desk:#cfd6de;
+  --paper:#ffffff; --paper-ink:#111111;
+  --ui:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --doc:"Nanum Myeongjo","Batang","AppleMyungjo",serif;
+  --doc-g:"Nanum Gothic","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10151b; --panel:#182029; --ink:#e2e8ee; --muted:#98a5b3; --line:#2b3642; --field:#121920;
+  --accent:#86b4ee; --accent-soft:#1d2d42; --stamp:#ff7b6b; --ok:#6fcf97; --warn:#f2b45a; --desk:#0b0f14; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10151b; --panel:#182029; --ink:#e2e8ee; --muted:#98a5b3; --line:#2b3642; --field:#121920;
+  --accent:#86b4ee; --accent-soft:#1d2d42; --stamp:#ff7b6b; --ok:#6fcf97; --warn:#f2b45a; --desk:#0b0f14; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:14px;overflow:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--panel)}
+button,input,select,textarea{font:inherit;color:inherit}
+.app{height:100%;display:flex;flex-direction:column}
+/* top bar */
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--panel);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;letter-spacing:-.01em;margin-right:6px}
+.brand .mark{width:26px;height:26px;border:2px solid var(--stamp);color:var(--stamp);border-radius:50%;display:grid;place-items:center;font-size:12px;font-family:var(--doc);font-weight:800}
+.projsel{min-width:0;flex:1 1 220px;max-width:420px;height:34px;border:1px solid var(--line);border-radius:6px;background:var(--field);padding:0 8px}
+.btn{height:34px;padding:0 12px;border-radius:6px;border:1px solid var(--line);background:var(--panel);cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}
+.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--panel);font-weight:600}
+.btn.danger{color:var(--stamp)}
+.btn.sm{height:28px;padding:0 9px;font-size:12.5px}
+.save-state{font-size:12px;color:var(--muted);margin-left:auto}
+.save-state b{font-weight:600;color:var(--ok)}
+.userbox{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.userbox .who-name{font-size:12.5px;color:var(--muted)}
+.userbox a.btn{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)}
+.confirm{display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--stamp)}
+.banner{padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--accent-soft);border-bottom:1px solid var(--line);font-size:13px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+/* main */
+.main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(380px,540px) 1fr}
+.pane{min-height:0;min-width:0;display:flex;flex-direction:column}
+.form-pane{background:var(--panel);border-right:1px solid var(--line)}
+.tabs{display:flex;gap:2px;overflow-x:auto;padding:8px 10px 0;border-bottom:1px solid var(--line);scrollbar-width:thin}
+.tab{border:0;background:none;padding:8px 10px 9px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;font-weight:500}
+.tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.form{flex:1;overflow:auto;padding:16px 18px 60px}
+.sec{display:grid;gap:12px;margin-bottom:24px}
+.sec h3{margin:0;font-size:13px;letter-spacing:.04em;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:8px}
+.sec h3::after{content:"";flex:1;height:1px;background:var(--line)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.fld{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;min-width:0;align-content:start}
+.fld.full{grid-column:1/-1}
+.fld>span{font-size:12px;color:var(--muted)}
+.fld em{font-style:normal;font-size:11.5px;color:var(--muted)}
+.fld input,.fld select,.fld textarea{height:34px;border:1px solid var(--line);border-radius:6px;background:var(--field);padding:0 9px;min-width:0;width:100%}
+.fld textarea{height:auto;padding:8px 9px;resize:vertical}
+.fld input[data-money]{text-align:right;font-variant-numeric:tabular-nums}
+.chk{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer}
+.chk input{width:16px;height:16px;accent-color:var(--accent)}
+.note{font-size:12.5px;color:var(--muted);line-height:1.55;margin:0}
+.calc{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:9px 12px;border-radius:6px;background:var(--field);border:1px dashed var(--line);font-size:13px}
+.calc b{font-variant-numeric:tabular-nums;font-size:14px}
+.calc.bad{border-color:var(--stamp);color:var(--stamp)}
+.calc.good{border-color:var(--ok)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:var(--panel);padding:6px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--panel);font-weight:600}
+/* editable tables */
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px}
+table.et{border-collapse:collapse;width:100%;font-size:12.5px}
+table.et th{background:var(--field);color:var(--muted);font-weight:500;text-align:left;padding:6px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.et td{padding:3px;border-bottom:1px solid var(--line)}
+table.et tr:last-child td{border-bottom:0}
+table.et input{width:100%;min-width:56px;height:30px;border:1px solid transparent;border-radius:4px;background:transparent;padding:0 6px}
+table.et input:hover{border-color:var(--line)}
+table.et input:focus{border-color:var(--accent);background:var(--field)}
+table.et input[data-money]{text-align:right;font-variant-numeric:tabular-nums}
+table.et td.num{text-align:right;font-variant-numeric:tabular-nums;padding-right:8px;white-space:nowrap}
+.x{border:0;background:none;color:var(--muted);cursor:pointer;width:26px;height:26px;border-radius:4px}
+.x:hover{color:var(--stamp);background:var(--field)}
+.cat{font-weight:600;font-size:12.5px;margin:6px 0 4px;display:flex;justify-content:space-between}
+/* images */
+.thumbs{display:flex;flex-wrap:wrap;gap:10px}
+.thumb{position:relative;width:110px;height:140px;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--field);display:grid;place-items:center}
+.thumb img{max-width:100%;max-height:100%;object-fit:contain}
+.thumb .x{position:absolute;top:2px;right:2px;background:var(--panel)}
+.thumb .tno{position:absolute;left:4px;top:4px;font-size:11px;background:var(--panel);border-radius:3px;padding:0 4px;color:var(--muted)}
+.thumb .mv{position:absolute;left:0;right:0;bottom:2px;display:flex;justify-content:center;gap:4px}
+.thumb .mv .x{position:static;background:var(--panel)}
+.thumb .mv .x:disabled{opacity:.3;cursor:default}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop{width:110px;height:140px;border:1.5px dashed var(--line);border-radius:6px;display:grid;place-items:center;text-align:center;font-size:12px;color:var(--muted);cursor:pointer;padding:6px}
+.drop:hover{border-color:var(--accent);color:var(--accent)}
+.sealbox{width:110px;height:110px}
+/* doc list */
+.doclist{display:grid;gap:2px}
+.docrow{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:8px;padding:7px 8px;border-radius:6px}
+.docrow:hover{background:var(--field)}
+.docrow .t{cursor:pointer}
+.docrow .t:hover{color:var(--accent)}
+.pill{font-size:11px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.pill.warn{border-color:var(--warn);color:var(--warn)}
+.pill.ok{border-color:var(--ok);color:var(--ok)}
+.issues{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.issues li{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;font-size:13px;line-height:1.45}
+.issues .lv{font-size:11px;font-weight:600;padding:1px 6px;border-radius:4px;border:1px solid}
+.issues .lv.e{color:var(--stamp);border-color:var(--stamp)}
+.issues .lv.w{color:var(--warn);border-color:var(--warn)}
+.issues .lv.i{color:var(--muted);border-color:var(--line)}
+.export{display:flex;flex-wrap:wrap;gap:8px}
+/* preview */
+.prev-pane{background:var(--desk)}
+.prev-bar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.prev-bar select{height:32px;border:1px solid var(--line);border-radius:6px;background:var(--field);padding:0 8px;min-width:0;flex:1 1 200px;max-width:360px}
+.prev-bar .pc{font-size:12px;color:var(--muted)}
+.sheets{flex:1;overflow:auto;padding:20px 16px 60px;display:flex;flex-direction:column;align-items:center;gap:18px}
+.sheet{background:var(--paper);box-shadow:0 1px 2px rgba(0,0,0,.18),0 6px 22px rgba(0,0,0,.12);overflow:hidden;flex:none;position:relative}
+.sheet>.page{transform-origin:0 0;position:absolute;left:0;top:0}
+.sheet-cap{font-size:11.5px;color:var(--muted);margin-bottom:-10px;align-self:center}
+.measure{position:absolute;left:-20000px;top:0;visibility:hidden}
+.export-host{position:fixed;left:0;top:0;z-index:-1}
+.overlay{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 88%,transparent);display:grid;place-items:center;z-index:50}
+.overlay .box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px 26px;min-width:260px;text-align:center;display:grid;gap:10px}
+.bar-out{height:6px;background:var(--field);border-radius:3px;overflow:hidden}
+.bar-in{height:100%;background:var(--accent);width:0}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:9px 16px;border-radius:8px;font-size:13px;z-index:60;max-width:calc(100% - 32px)}
+.mtoggle{display:none}
+.example-flag{font-size:11.5px;color:var(--warn);border:1px solid var(--warn);border-radius:4px;padding:1px 6px}
+@media (max-width:900px){
+  .main{grid-template-columns:1fr}
+  .mtoggle{display:inline-flex}
+  .main[data-view="form"] .prev-pane{display:none}
+  .main[data-view="prev"] .form-pane{display:none}
+  .grid{grid-template-columns:1fr}
+  .form{padding:14px max(16px,env(safe-area-inset-right,0px)) 60px max(16px,env(safe-area-inset-left,0px))}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ======== 서류(종이) 스타일: 테마와 무관하게 흰 종이 ======== */
+.page{width:794px;height:1123px;box-sizing:border-box;padding:76px 72px 64px;background:#fff;color:#111;font-family:var(--doc);font-size:15px;line-height:1.6;position:relative}
+.page.land{width:1123px;height:794px;padding:44px 40px 36px}
+.page *{box-sizing:border-box}
+.pbody{height:100%;overflow:hidden;position:relative}
+.pno{position:absolute;bottom:26px;left:0;right:0;text-align:center;font-size:12px;color:#444}
+.std{display:flex;flex-direction:column;height:100%}
+.sp{flex:1}
+.sp2{flex:2}
+.dt{font-size:34px;font-weight:800;text-align:center;letter-spacing:.55em;margin:0 0 0 .55em;font-family:var(--doc)}
+.dt.md{font-size:28px;letter-spacing:.4em;margin-left:.4em}
+.dt.sm{font-size:24px;letter-spacing:.25em;margin-left:.25em}
+.formno{font-size:12px;font-family:var(--doc-g);display:flex;justify-content:space-between;margin-bottom:10px}
+.kv{border-collapse:collapse;width:100%}
+.kv th{text-align:justify;text-align-last:justify;text-justify:inter-character;font-weight:700;width:140px;padding:9px 0;vertical-align:top}
+.kv td{padding:9px 0 9px 6px;vertical-align:top}
+.kv td.colon{width:20px;padding-left:10px}
+.kv.big{font-size:17px}
+.kv.big th{width:150px}
+.stmt{font-size:16.5px;text-align:center;margin:0}
+.stmt.l{text-align:left;text-indent:1em;line-height:1.95}
+.date-c{text-align:center;font-size:16.5px;letter-spacing:.06em}
+.sig{border-collapse:collapse;margin-left:auto;margin-right:20px;font-size:15.5px}
+.sig th{font-weight:700;text-align:justify;text-align-last:justify;width:72px;padding:3px 10px 3px 0;white-space:nowrap}
+.sig td{padding:3px 0;white-space:nowrap}
+.to{font-size:19px;font-weight:700;letter-spacing:.06em}
+.to span{margin-left:14px;font-weight:700}
+.in{position:relative;display:inline-block;margin-left:6px}
+.seal-img{position:absolute;left:50%;top:50%;width:64px;height:64px;object-fit:contain;transform:translate(-50%,-50%);mix-blend-mode:multiply;opacity:.92}
+table.fm{border-collapse:collapse;width:100%;font-size:14.5px}
+table.fm th,table.fm td{border:1px solid #222;padding:7px 9px;vertical-align:middle}
+table.fm th{font-weight:700;text-align:center;background:#f3f3f3;white-space:nowrap}
+table.fm td.r{text-align:right;font-variant-numeric:tabular-nums}
+table.fm td.c{text-align:center}
+table.fm.thick{border:2px solid #111}
+table.fm.small{font-size:12.5px}
+table.fm.small th,table.fm.small td{padding:5px 7px}
+table.fm.dense th,table.fm.dense td{padding:3px 7px}
+.appr{display:flex;justify-content:flex-end}
+.appr table{border-collapse:collapse;font-size:13.5px}
+.appr th,.appr td{border:1px solid #222;text-align:center;padding:4px 10px}
+.appr th.v{width:30px;line-height:1.15;padding:4px}
+.appr td{height:62px;min-width:130px;position:relative;vertical-align:bottom}
+/* 공문 */
+.lh{text-align:center;border-bottom:3px double #111;padding-bottom:8px}
+.lh .nm{font-size:30px;font-weight:800;letter-spacing:.15em}
+.lh .ad{font-size:12.5px;font-family:var(--doc-g)}
+.lt{display:grid;grid-template-columns:1fr 250px;gap:16px;margin-top:16px}
+.lt table.kv th{width:96px;padding:4px 0}
+.lt table.kv td{padding:4px 0 4px 8px}
+.rcv{border-collapse:collapse;font-size:11.5px;font-family:var(--doc-g);width:100%}
+.rcv td,.rcv th{border:1px solid #333;padding:3px 5px;font-weight:400;height:22px}
+.subj{border-top:1px solid #111;border-bottom:1px solid #111;padding:10px 0;margin:18px 0 18px;font-size:16px}
+.subj b{display:inline-block;width:96px;text-align:justify;text-align-last:justify;margin-right:8px}
+.lbody p{margin:0 0 6px;padding-left:2em;text-indent:-1.2em;line-height:1.9}
+.lfoot{text-align:center;font-size:21px;font-weight:800;letter-spacing:.08em}
+/* 표지 */
+.cov{display:flex;flex-direction:column;align-items:center;height:100%;text-align:center;position:relative;padding:0 30px}
+.cov .ct{font-size:46px;font-weight:800;letter-spacing:.5em;margin-left:.5em;margin-top:150px}
+.cov .cn{font-size:21px;font-weight:700;margin-top:56px;max-width:560px;line-height:1.6}
+.cov .cd{font-size:19px;letter-spacing:.08em}
+.cov .cc{font-size:28px;font-weight:800;letter-spacing:.12em;margin-bottom:60px}
+.cov .frame{position:absolute;inset:8px;border:1.5px solid #111;outline:5px double #111;outline-offset:6px;pointer-events:none}
+/* 공정표 */
+table.gantt{border-collapse:collapse;width:100%;font-family:var(--doc-g);font-size:11.5px;table-layout:fixed}
+table.gantt th,table.gantt td{border:1px solid #333;padding:0 3px;text-align:center}
+table.gantt th{background:#f1f1f1;font-weight:700;height:24px}
+table.gantt td.nm{text-align:left;padding:0 5px;line-height:1.15;font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+table.gantt td.cell{position:relative;padding:0}
+table.gantt .gb{position:absolute;top:28%;height:30%;background:#1f3f73}
+table.gantt .gv{position:absolute;bottom:1px;left:0;right:0;font-size:8.5px;color:#333;line-height:1}
+table.gantt tr.sum td{background:#f7f7f7;font-weight:700;height:22px;font-size:10.5px;white-space:nowrap;overflow:hidden}
+.gnote{font-size:11.5px;font-family:var(--doc-g);margin-top:6px}
+/* 서식 본문 (계획서) */
+.h1{font-size:22px;font-weight:800;margin:0 0 14px}
+.h2{font-size:17px;font-weight:800;margin:10px 0 8px}
+.h3{font-size:15.5px;font-weight:700;margin:8px 0 6px;padding-left:.8em}
+.pp{margin:0 0 6px;padding-left:2.2em;line-height:1.8}
+.pi{margin:0 0 4px;padding-left:3.6em;text-indent:-1.4em;line-height:1.75}
+.pi2{margin:0 0 3px;padding-left:5em;text-indent:-1.2em;line-height:1.7}
+.blk{padding-bottom:0}
+.toc{width:76%;margin:30px auto 0;font-size:16px}
+.toc div{display:flex;gap:8px;padding:5px 0;border-bottom:1px dotted #999}
+.toc div.s{padding-left:1.6em;font-size:15px}
+.org{display:flex;flex-direction:column;align-items:center;gap:0;margin:10px 0 6px;font-family:var(--doc-g)}
+.org .b{border:1.5px solid #111;padding:8px 14px;min-width:220px;text-align:center;font-size:13.5px;line-height:1.45;background:#fff}
+.org .b small{display:block;font-size:11.5px;color:#444}
+.org .v{width:1.5px;height:22px;background:#111}
+.org .row{display:flex;align-items:center}
+.org .h{height:1.5px;width:40px;background:#111;border-top:1.5px dashed #111;background:none}
+.org .side{border:1.5px dashed #111;padding:6px 10px;font-size:12.5px;text-align:center;width:150px;flex:none}
+.org .sidesp{width:190px;flex:none}
+.org .lvl{display:flex;justify-content:center}
+.org .nd{position:relative;padding:16px 5px 0}
+.org .nd::before{content:"";position:absolute;top:0;left:50%;height:16px;border-left:1.5px solid #111}
+.org .nd::after{content:"";position:absolute;top:0;left:0;right:0;border-top:1.5px solid #111}
+.org .nd:first-child::after{left:50%}
+.org .nd:last-child::after{right:50%}
+.org .b.m{min-width:96px;padding:6px 8px;font-size:12px}
+.flow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;font-family:var(--doc-g);font-size:12.5px;margin:6px 0 10px}
+.flow span.b{border:1.2px solid #111;padding:5px 9px}
+.attach{display:flex;flex-direction:column;height:100%}
+.attach .lab{font-family:var(--doc-g);font-size:13px;display:flex;justify-content:space-between;border-bottom:1px solid #111;padding-bottom:6px}
+.attach .im{flex:1;display:grid;place-items:center;min-height:0;padding:14px 0}
+.attach .im img{max-width:100%;max-height:100%;object-fit:contain}
+.attach .im{display:flex;flex-direction:column;gap:14px}
+.attach .ai{position:relative;flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center}
+.attach .im.two .wonbon{padding:5px 10px}.attach .im.two .wonbon .t{font-size:15px}
+.attach .empty{border:1.5px dashed #999;color:#777;font-family:var(--doc-g);width:100%;height:100%;display:grid;place-items:center;text-align:center;font-size:14px}
+.wonbon{position:absolute;right:10px;bottom:10px;border:2.5px solid #c0392b;color:#c0392b;padding:8px 14px;font-family:var(--doc-g);text-align:center;font-weight:700;background:rgba(255,255,255,.85)}
+.wonbon .t{font-size:18px;letter-spacing:.3em;margin-left:.3em}
+.wonbon .c{font-size:12px;margin-top:3px}
+.sealpair{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid #111;margin:40px 40px 0}
+.sealpair div{text-align:center}
+.sealpair .hd{border-bottom:1.5px solid #111;padding:8px;font-weight:700;letter-spacing:.3em}
+.sealpair .bx{height:200px;display:grid;place-items:center}
+.sealpair .bx img{max-width:150px;max-height:150px}
+.sealpair div+div{border-left:1.5px solid #111}
+.pledge{border:1.5px solid #111;padding:16px 20px;line-height:1.95;font-size:15px}
+</style>
+
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand"><span class="mark">착</span>착공계 원스톱</div>
+    <select class="projsel" id="projSel" aria-label="프로젝트 선택"></select>
+    <button class="btn" id="btnNew">새 프로젝트</button>
+    <button class="btn" id="btnDup">복제</button>
+    <span id="delWrap"><button class="btn danger" id="btnDel">삭제</button></span>
+    <span class="seg mtoggle" role="group" aria-label="화면 전환"><button id="vForm" aria-pressed="true">입력</button><button id="vPrev" aria-pressed="false">미리보기</button></span>
+    <span class="save-state" id="saveState">불러오는 중…</span>
+    <span class="userbox" id="userBox"></span>
+  </header>
+  <div id="bannerHost"></div>
+  <main class="main" id="main" data-view="form">
+    <section class="pane form-pane" aria-label="입력">
+      <nav class="tabs" id="tabs" role="tablist"></nav>
+      <div class="form" id="form"></div>
+    </section>
+    <section class="pane prev-pane" aria-label="미리보기">
+      <div class="prev-bar">
+        <button class="btn sm" id="pvPrev" aria-label="이전 서류">◀</button>
+        <select id="docSel" aria-label="미리볼 서류"></select>
+        <button class="btn sm" id="pvNext" aria-label="다음 서류">▶</button>
+        <span class="pc" id="pvCount"></span>
+      </div>
+      <div class="sheets" id="sheets"></div>
+    </section>
+  </main>
+</div>
+<div class="measure" id="measure"></div>
+<input type="file" id="fileImg" accept="image/*" multiple hidden>
+<input type="file" id="fileJson" accept="application/json,.json" hidden>
+
+<script>
+"use strict";
+/* ================= 유틸 ================= */
+const $=(s,el=document)=>el.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const num=v=>{if(typeof v==='number')return v;const n=Number(String(v??'').replace(/[^\d.\-]/g,''));return isFinite(n)?n:0};
+const won=n=>Math.round(num(n)).toLocaleString('ko-KR');
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const clone=o=>JSON.parse(JSON.stringify(o));
+const nl=s=>esc(s).replace(/\n/g,'<br>');
+function numKo(n){n=Math.floor(Math.abs(num(n)));if(!n)return '영';const d='영일이삼사오육칠팔구',u=['','십','백','천'],big=['','만','억','조','경'];let s='',g=0;while(n>0){const part=n%10000;if(part){const ds=String(part).padStart(4,'0');let p='';for(let i=0;i<4;i++){const k=+ds[i];if(k)p+=d[k]+u[3-i];}s=p+big[g]+s;}n=Math.floor(n/10000);g++;}return s;}
+const amtKo=n=>`일금 ${numKo(n)}원정(₩${won(n)})`;
+function pd(s){if(!s)return null;const m=String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);if(!m)return null;return new Date(Date.UTC(+m[1],+m[2]-1,+m[3]));}
+const iso=d=>d?d.toISOString().slice(0,10):'';
+const p2=n=>String(n).padStart(2,'0');
+const fDot=s=>{const d=pd(s);return d?`${d.getUTCFullYear()}. ${p2(d.getUTCMonth()+1)}. ${p2(d.getUTCDate())}`:'    .   .   ';};
+const fKo=s=>{const d=pd(s);return d?`${d.getUTCFullYear()}년 ${p2(d.getUTCMonth()+1)}월 ${p2(d.getUTCDate())}일`:'      년    월    일';};
+const DAY=86400000;
+const daysIncl=(a,b)=>{const x=pd(a),y=pd(b);return x&&y?Math.round((y-x)/DAY)+1:0;};
+const addDays=(s,n)=>{const d=pd(s);return d?iso(new Date(+d+n*DAY)):'';};
+const josa=(w,a,b)=>{const c=String(w||'').trim().slice(-1).charCodeAt(0);if(!(c>=0xAC00&&c<=0xD7A3))return a+'('+b+')';return (c-0xAC00)%28?a:b;};
+const spaced=(s,g='&nbsp;&nbsp;')=>{s=String(s||'').trim();if(!s)return '';if(/\s/.test(s)||s.length>4)return esc(s);return [...s].map(esc).join(g);};
+const r2=n=>Math.round(n*100)/100;
+const fmtPct=n=>{const v=r2(n);return v?String(v):'';};
+function toast(msg,ms=2600){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),ms);}
+
+/* ================= 데이터 모델 ================= */
+const SAFETY_CATS=[
+  ['c1','1. 안전·보건관리자 임금 등'],['c2','2. 안전시설비 등'],['c3','3. 보호구 등'],['c4','4. 안전보건진단비 등'],
+  ['c5','5. 안전보건교육비 등'],['c6','6. 근로자 건강장해예방비 등'],['c7','7. 건설재해예방전문지도기관 기술지도비'],
+  ['c8','8. 본사 전담조직 근로자 임금 등'],['c9','9. 위험성평가 등에 따른 소요비용']];
+const FIXED_ROWS=[['survey','현장답사 및 공정협의',1,0,.3],['material','자재수급',2,.08,.35]];
+const FIXED_TAIL=[['cleanup','손질공사 및 현장정리',.5,.86,.98],['test','시험운용 및 준공',1.5,.94,1]];
+function emptySafety(){const o={};SAFETY_CATS.forEach(([k])=>o[k]=[]);return o;}
+function emptyScope(){return {amount:'',end:'',
+  direct:{kind:'',sub:'',method:'단독',direct:'',labor:'',insurance:'',safety:'',expense:'',overhead:'',profit:'',waste:'',adjust:'',vat:''},
+  safety:emptySafety(),
+  sched:{fixed:{survey:{w:1,s:'',e:''},material:{w:2,s:'',e:''},cleanup:{w:.5,s:'',e:''},test:{w:1.5,s:'',e:''}},rows:[]}};}
+function emptyCompany(){return {name:'',ceo:'',zip:'',addr:'',tel:'',fax:'',ceoBirth:'',docPrefix:'',sealCorp:'',sealUse:''};}
+function emptyProject(){return {id:uid(),updated:Date.now(),
+  name:'',trade:'전기',contractNo:'',owner:'',honor:'귀청',via:'',ref:'담당자',inspector:'',site:'',siteDesc:'',ownerType:'공공',ownerAddr:'',
+  longTerm:false,contractDate:'',startDate:'',submitDate:'',docNo:'',copies:3,
+  scopes:{all:emptyScope(),first:emptyScope()},
+  agent:{name:'',addr:'',phone:'',licType:'',licGrade:'',licNo:'',rrn6:'',rrn1:'',joinDate:'',position:'',dept:'',certNo:''},
+  safetyMgr:{same:true,name:'',grade:'',licNo:'',phone:''},
+  gm:{same:true,name:'',birth:'',addr:''},
+  disaster:{sameCeo:true,name:'',birth:''},
+  emergency:{supervisor:'',supervisorTel:'',inspectorTel:'',hospital:'',hospitalTel:'',fire:'',fireTel:'119',police:'',policeTel:'112'},
+  works:[],workers:[],sealTo:'',
+  org:{custom:false,boxes:[],left:{on:true,t:'발주처 감독관',n:'',lv:2},right:{on:true,t:'감리단',n:'',lv:2}},
+  docs:{},attach:{license:[],career:[],sealCert:[]},attachLayout:{license:1,career:1}};}
+function normalize(p){const b=emptyProject();const o=Object.assign(b,p||{});
+  ['agent','safetyMgr','gm','disaster','emergency','attach'].forEach(k=>o[k]=Object.assign(emptyProject()[k],(p||{})[k]||{}));
+  {const e=emptyProject().org,g=(p||{}).org||{};o.org={custom:!!g.custom,boxes:g.boxes||[],left:Object.assign(e.left,g.left||{}),right:Object.assign(e.right,g.right||{})};}
+  o.scopes=o.scopes||{};['all','first'].forEach(k=>{const e=emptyScope(),s=o.scopes[k]||{};
+    o.scopes[k]=Object.assign(e,s);o.scopes[k].direct=Object.assign(e.direct,s.direct||{});
+    o.scopes[k].safety=Object.assign(emptySafety(),s.safety||{});
+    const sc=s.sched||{};o.scopes[k].sched={fixed:Object.assign(e.sched.fixed,sc.fixed||{}),rows:sc.rows||[]};});
+  o.attachLayout=Object.assign({license:1,career:1},(p||{}).attachLayout||{});
+  o.works=o.works||[];o.workers=o.workers||[];o.docs=o.docs||{};return o;}
+
+/* 예시: 업로드한 착공계 엑셀을 기준으로 구성 (개인 식별번호는 비움) */
+function exampleCompany(){return Object.assign(emptyCompany(),{name:'(주)예시전력',ceo:'홍길동',zip:'00000',addr:'○○도 ○○시 ○○로 00',tel:'(000)000-0000',fax:'(000)000-0001',docPrefix:'EX',_example:true});}
+function exampleProject(){const p=emptyProject();Object.assign(p,{_example:true,
+  name:'○○부대 시설 개편사업 통신공사 (예시)',trade:'통신',contractNo:'0000ABCD000',owner:'○○분임계약관',honor:'귀청',via:'○○감리단',ref:'담당자',inspector:'김감독',
+  site:'○○도 ○○시 ○○길 00',siteDesc:'○○부대 내',longTerm:true,contractDate:'2023-12-28',startDate:'2024-01-08',submitDate:'2024-01-08',docNo:'EX2024-01호',copies:3,sealTo:'○○분임계약관'});
+  const a=p.scopes.all;a.amount=620120000;a.end='2025-11-10';
+  Object.assign(a.direct,{kind:'전기',sub:'기타',direct:397742096,labor:24428571,insurance:41452162,safety:13046113,expense:25656203,overhead:27906227,profit:28461094,waste:5060810,adjust:-7820});
+  a.safety.c2=[{period:'2024.01 ~ 2025.11',name:'사다리전도방지대',unit:'set',price:200000,qty:4}];
+  a.safety.c3=[['안전화','족',120000,40],['안전모','개',12000,42],['안전각반','장',2500,48],['X형 안전띠','개',150000,40],['방진마스크','개',1500,600],['분진복','벌',10000,60],['안전화커버','pair',2000,200]].map(r=>({period:'2024.01 ~ 2025.11',name:r[0],unit:r[1],price:r[2],qty:r[3]}));
+  a.safety.c6=[{period:'2024.01 ~ 2025.11',name:'안전구급의약품함',unit:'SET',price:100000,qty:4},{period:'2024.01 ~ 2025.11',name:'제빙기 임대',unit:'대',price:300000,qty:1}];
+  a.sched.rows=[['옥외통신설비공사',22033159],['병영식당 전화및LAN설비공사',20691918],['병영식당 방송설비공사',20691918],['병영식당 CCTV설비공사',20691918],['병영식당 원격검침설비공사',20691918],['일반창고 전화및LAN설비공사',20691918],['일반창고 방송설비공사',20691918],['일반창고 CABLE TRAY설비공사',20691918],['정비공장 전화및LAN설비공사',20691918],['정비공장 방송설비공사',20691918],['일반창고 CCTV설비공사',15925764],['정비공장 CABLE TRAY설비공사',2550464],['행정시설 전화및LAN설비공사',2550464],['행정시설 방송설비공사',2550464],['행정시설 CCTV설비공사',2550464],['행정시설 원격검침설비공사',2550464],['행정시설 CABLE TRAY설비공사',2550464]].map(r=>({name:r[0],amount:r[1],s:'',e:''}));
+  const f=p.scopes.first;f.amount=100000000;f.end='2024-08-31';
+  f.sched.rows=[['옥외통신설비공사',22033159],['전화및LAN설비공사',20691918],['방송설비공사',20691918],['CCTV설비공사',15925764],['CABLE TRAY설비공사',2550464]].map(r=>({name:r[0],amount:r[1],s:'',e:''}));
+  f.direct.kind='전기';f.direct.sub='기타';
+  p.agent=Object.assign(p.agent,{name:'박현장',licType:'전기기능사',licGrade:'통신초급',licNo:'0000-00000-000',joinDate:'2014-01-02',position:'부장',dept:'통신사업부',certNo:'2024-001'});
+  p.gm.addr='○○도 ○○시 ○○로 00';
+  p.works=['옥외통신설비공사','전화및LAN설비공사','방송설비공사','CCTV설비공사','원격검침설비공사','CABLE TRAY설비공사'].map(n=>({name:n,qty:'1식'}));
+  p.workers=[['박현장','현장대리인'],['최소장','현장소장'],['정과장','과장'],['강전공','전공'],['조전공','전공']].map(r=>({name:r[0],birth:'',role:r[1]}));
+  return p;}
+
+/* ================= 저장소 (계정 저장소 우선, 없으면 이 브라우저) ================= */
+const Store={mode:'api',
+  async req(path,opts={}){const r=await fetch('/api/data'+path,{method:opts.method||'GET',headers:{'Content-Type':'application/json','X-Requested-With':'fetch'},body:opts.body!==undefined?JSON.stringify(opts.body):undefined,credentials:'same-origin'});
+    let j={};try{j=await r.json();}catch(_){}
+    if(r.status===401){location.href='/login';throw new Error('login');}
+    if(r.status===403){location.href='/license';throw new Error(j.error||'license');}
+    if(!r.ok){const e=new Error(j.error||'저장 실패');e.code=r.status;throw e;}return j;},
+  async connect(){return true;},
+  async loadAll(){return this.req('/');},
+  async saveCompany(c){return this.req('/company',{method:'PUT',body:c});},
+  async saveProject(p){return this.req('/projects/'+encodeURIComponent(p.id),{method:'PUT',body:p});},
+  async deleteProject(id){return this.req('/projects/'+encodeURIComponent(id),{method:'DELETE'});},
+  async saveImg(id,data){return this.req('/images/'+encodeURIComponent(id),{method:'PUT',body:{data}});},
+  async loadImg(id){try{const r=await this.req('/images/'+encodeURIComponent(id));return r.data;}catch(e){return null;}},
+  async deleteImg(id){return this.req('/images/'+encodeURIComponent(id),{method:'DELETE'});}
+};
+
+/* ================= 상태 ================= */
+let C=exampleCompany();
+let projects=[exampleProject()];
+let P=projects[0];
+let tab='basic', formScope='all', curDoc='letter', delConfirm=false;
+const imgCache={};
+const dirty={company:false,project:new Set()};
+let saveTimer=null, renderTimer=null, focusOrg=false, focus47=false;
+
+function setSave(t,ok){const el=$('#saveState');el.innerHTML=ok?`<b>●</b> ${esc(t)}`:esc(t);}
+function storeLabel(){return '서버에 저장됨';}
+
+function markDirty(kind){if(kind==='c'){if(C._example)delete C._example;dirty.company=true;}else{if(P._example)delete P._example;P.updated=Date.now();dirty.project.add(P.id);}
+  setSave('저장 대기…');clearTimeout(saveTimer);saveTimer=setTimeout(flush,800);}
+async function flush(){try{if(dirty.project.size&&C._example){delete C._example;dirty.company=true;}
+  if(dirty.company){dirty.company=false;await Store.saveCompany(C);}
+  for(const id of [...dirty.project]){dirty.project.delete(id);const p=projects.find(x=>x.id===id);if(p&&!p._example)await Store.saveProject(p);}
+  setSave(storeLabel(),true);renderProjSel();}
+  catch(e){setSave('저장 실패 — 백업 파일로 내보내 두세요');}}
+
+/* ================= 파생 값 ================= */
+const scopeKeys=()=>P.longTerm?['all','first']:['all'];
+const scopeLabel=k=>P.longTerm?(k==='all'?'전체':'1차'):'';
+function directCalc(d){const v=k=>num(d[k]);const subtotal=v('direct')+v('labor')+v('insurance')+v('safety');
+  const total=subtotal+v('expense')+v('overhead')+v('profit')+v('waste')+v('adjust');
+  const vat=String(d.vat??'').trim()!==''?v('vat'):Math.floor(total*0.1);
+  const grand=Math.trunc((total+vat)/100)*100;return {subtotal,total,vat,grand,any:subtotal+total>0};}
+function safetyCalc(s){const cats={};let sum=0;SAFETY_CATS.forEach(([k])=>{const t=(s.safety[k]||[]).reduce((a,r)=>a+num(r.price)*num(r.qty),0);cats[k]=t;sum+=t;});return {cats,sum,budget:num(s.direct.safety)};}
+function schedRows(sk){const s=P.scopes[sk];const start=P.startDate,end=s.end;const span=Math.max(daysIncl(start,end)-1,0);
+  const dflt=(a,b)=>[addDays(start,Math.round(span*a)),addDays(start,Math.round(span*b))];
+  const fx=s.sched.fixed;const fixedSum=[...FIXED_ROWS,...FIXED_TAIL].reduce((a,[k])=>a+num(fx[k].w),0);
+  const rest=Math.max(100-fixedSum,0);const rows=s.sched.rows;const tot=rows.reduce((a,r)=>a+num(r.amount),0);
+  const out=[];
+  FIXED_ROWS.forEach(([k,n,,a,b])=>{const d=dflt(a,b);out.push({key:k,name:n,w:num(fx[k].w),s:fx[k].s||d[0],e:fx[k].e||d[1],fixed:true});});
+  const N=rows.length;rows.forEach((r,i)=>{const a=.12+(N>1?(.55*i/(N-1)):0)*.6,b=Math.min(a+.45,.9);const d=dflt(a,b);
+    out.push({idx:i,name:r.name,amount:num(r.amount),w:tot?num(r.amount)/tot*rest:(N?rest/N:0),s:r.s||d[0],e:r.e||d[1]});});
+  FIXED_TAIL.forEach(([k,n,,a,b])=>{const d=dflt(a,b);out.push({key:k,name:n,w:num(fx[k].w),s:fx[k].s||d[0],e:fx[k].e||d[1],fixed:true});});
+  return out;}
+function months(sk){const a=pd(P.startDate),b=pd(P.scopes[sk].end);if(!a||!b||b<a)return [];const out=[];let y=a.getUTCFullYear(),m=a.getUTCMonth();
+  while(y<b.getUTCFullYear()||(y===b.getUTCFullYear()&&m<=b.getUTCMonth())){const ms=new Date(Date.UTC(y,m,1)),me=new Date(Date.UTC(y,m+1,0));out.push({y,m,ms,me});m++;if(m>11){m=0;y++;}if(out.length>240)break;}return out;}
+function distribute(row,mons){const s=pd(row.s),e=pd(row.e);if(!s||!e||e<s)return mons.map(()=>({v:0,l:0,w:0}));const total=(e-s)/DAY+1;
+  return mons.map(M=>{const a=new Date(Math.max(+s,+M.ms)),b=new Date(Math.min(+e,+M.me));if(b<a)return {v:0,l:0,w:0};const d=(b-a)/DAY+1;const md=(M.me-M.ms)/DAY+1;
+    return {v:row.w*d/total,l:((a-M.ms)/DAY)/md*100,w:d/md*100};});}
+function ag(){return P.agent;}
+function safetyPerson(){return P.safetyMgr.same?{name:P.agent.name,grade:[P.agent.licType,P.agent.licGrade].filter(Boolean).join('(')+(P.agent.licGrade&&P.agent.licType?')':''),licNo:P.agent.licNo,phone:P.agent.phone}:P.safetyMgr;}
+function gmPerson(){return P.gm.same?{name:P.agent.name,birth:P.agent.rrn6?birthFromRrn(P.agent.rrn6,P.agent.rrn1):'',addr:P.gm.addr||P.agent.addr}:P.gm;}
+function disasterPerson(){return P.disaster.sameCeo?{name:C.ceo,birth:C.ceoBirth}:P.disaster;}
+function birthFromRrn(r6,r1){if(!/^\d{6}$/.test(r6||''))return '';const c=['1','2','5','6'].includes(String(r1))?'19':['3','4','7','8'].includes(String(r1))?'20':(+r6.slice(0,2)>30?'19':'20');return `${c}${r6.slice(0,2)}-${r6.slice(2,4)}-${r6.slice(4,6)}`;}
+const rrnMask=(r6,r1)=>r6?`${esc(r6)} - ${esc(r1||'')}${r1?'xxxxxx':'xxxxxxx'}`:'';
+const sealSrc=()=>C.sealUse||C.sealCorp||'';
+const sealHtml=(src=sealSrc())=>`<span class="in">(인)${src?`<img class="seal-img" src="${src}" alt="">`:''}</span>`;
+const honor=()=>P.honor||'귀청';
+const tradeWord=()=>({'전기':'전기','통신':'통신','소방':'소방'}[P.trade]||'');
+
+/* ================= 서류 정의 ================= */
+const DOCS=[
+  {key:'letter',title:'공문 (착공계 제출의 건)'},
+  {key:'cover',title:'표지'},
+  {key:'start',title:'착공계'},
+  {key:'sched',title:'예정공정표',scoped:true},
+  {key:'agent',title:'현장대리인 선임계'},
+  {key:'employ',title:'재직증명서'},
+  {key:'license',title:'자격증 사본',attach:'license'},
+  {key:'career',title:'경력확인서',attach:'career'},
+  {key:'safetyMgr',title:'안전관리자 선임계 (전기공사업법)',off:true},
+  {key:'safetyPlan',title:'안전관리계획서'},
+  {key:'gm',title:'산업안전보건 총괄책임자 선임계'},
+  {key:'disaster',title:'재해방지책임자 선임계'},
+  {key:'safetyCost',title:'산업안전보건관리비 사용계획서',scoped:true},
+  {key:'safetyDetail',title:'항목별 세부사용계획',scoped:true},
+  {key:'quality',title:'품질관리계획서'},
+  {key:'direct',title:'직접시공계획서',scoped:true},
+  {key:'workers',title:'공사 근로자 참여현황'},
+  {key:'sealUse',title:'사용인감계'},
+  {key:'sealCert',title:'인감증명서 사본',attach:'sealCert'},
+  {key:'commence',title:'착수계 (물품·용역용)',off:true},
+];
+const docOn=d=>P.docs[d.key]!==undefined?P.docs[d.key]:!d.off;
+
+/* 공통 블록 */
+function sigBlock(){return `<table class="sig">
+<tr><th>주 소</th><td>: ${esc(C.addr)}</td></tr>
+<tr><th>회 사 명</th><td>: ${esc(C.name)}</td></tr>
+<tr><th>대 표</th><td>: ${spaced(C.ceo,'&nbsp;&nbsp;&nbsp;')}&nbsp;&nbsp;${sealHtml()}</td></tr>
+<tr><th>전 화</th><td>: ${esc(C.tel)}${C.fax?`, 팩스 : ${esc(C.fax)}`:''}</td></tr></table>`;}
+const toLine=(who=P.owner)=>`<div class="to">${esc(who)}<span>귀하</span></div>`;
+const subDate=()=>P.submitDate||P.startDate;
+
+/* ---------- 1. 공문 ---------- */
+function D_letter(){const t=tradeWord();return [{page:`<div class="std">
+<div class="lh"><div class="nm">${esc(C.name)}</div><div class="ad">${C.zip?'우'+esc(C.zip)+'&nbsp;&nbsp;':''}${esc(C.addr)}&nbsp;&nbsp;&nbsp;☎${esc(C.tel)}&nbsp;&nbsp;FAX ${esc(C.fax)}</div></div>
+<div class="lt"><table class="kv">
+<tr><th>문서번호</th><td>: ${esc(P.docNo)}</td></tr>
+<tr><th>시행일자</th><td>: ${fDot(subDate())}</td></tr>
+<tr><th>수 신</th><td>: ${esc(P.owner)}</td></tr>
+<tr><th>경 유</th><td>: ${esc(P.via)}</td></tr>
+<tr><th>참 조</th><td>: ${esc(P.ref)}</td></tr></table>
+<table class="rcv"><tr><td rowspan="2" style="width:22%">선 결</td><td colspan="3" style="text-align:center">지 시</td></tr><tr><td colspan="3" style="text-align:center">결재 · 공람</td></tr>
+<tr><td rowspan="3">접 수</td><td style="width:22%">일 자</td><td colspan="2"></td></tr><tr><td>시 간</td><td colspan="2"></td></tr><tr><td>번 호</td><td colspan="2"></td></tr>
+<tr><td>처리과</td><td colspan="3"></td></tr><tr><td>담당자</td><td colspan="3"></td></tr></table></div>
+<div class="subj"><b>제 목</b>: ${esc(P.name)} 착공계 제출의 건</div>
+<div class="lbody">
+<p>1. ${P.contractNo?`계약번호 ${esc(P.contractNo)}(${fDot(P.contractDate).replace(/\s/g,'')}) 관련`:`${fDot(P.contractDate).replace(/\s/g,'')} 체결 계약 관련`}</p>
+<p>2. ${esc(honor())}의 무궁한 발전을 기원합니다.</p>
+<p>3. ${esc(honor())}${josa(honor(),'과','와')} 계약체결한 "${esc(P.name)}" 건에 대한 착공서류를 붙임과 같이 제출합니다.</p>
+<p style="margin-top:22px;text-indent:0;padding-left:0">붙임 : 1) 착공계 ${esc(P.copies||1)}부.&nbsp;&nbsp;끝.</p></div>
+<div class="sp"></div>
+<div class="lfoot">${esc(C.name)}&nbsp;&nbsp;대표이사&nbsp;&nbsp;${spaced(C.ceo)}&nbsp;&nbsp;${sealHtml()}</div>
+<div style="height:40px"></div></div>`}];}
+
+/* ---------- 2. 표지 ---------- */
+function D_cover(){return [{page:`<div class="cov"><div class="frame"></div>
+<div class="ct">착 공 계</div>
+<div class="cn">[ ${esc(P.name)} ]</div>
+<div class="sp"></div><div class="cd">${fDot(subDate())}</div><div class="sp"></div>
+<div class="cc">${esc(C.name)}</div></div>`}];}
+
+/* ---------- 3. 착공계 ---------- */
+function D_start(){const A=P.scopes.all,F=P.scopes.first;const lt=P.longTerm;
+  const endLines=lt?`<tr><th>준공예정일</th><td class="colon">:</td><td>${fKo(A.end)}&nbsp;&nbsp;(전체, 착공후 ${daysIncl(P.startDate,A.end)}일)<br>${fKo(F.end)}&nbsp;&nbsp;(1차, 착공후 ${daysIncl(P.startDate,F.end)}일)</td></tr>`
+    :`<tr><th>준공예정일</th><td class="colon">:</td><td>${fKo(A.end)}&nbsp;&nbsp;(착공후 ${daysIncl(P.startDate,A.end)}일)</td></tr>`;
+  return [{page:`<div class="std">
+<div class="appr"><table><tr><th rowspan="2" class="v">경<br><br>유</th><th>감&nbsp;&nbsp;독&nbsp;&nbsp;관</th></tr><tr><td>${spaced(P.inspector)}&nbsp;&nbsp;(인)</td></tr></table></div>
+<div style="height:40px"></div><h1 class="dt">착 공 계</h1><div style="height:56px"></div>
+<table class="kv big">
+<tr><th>공 사 명</th><td class="colon">:</td><td>${esc(P.name)}</td></tr>
+${lt?`<tr><th>전체계약금액</th><td class="colon">:</td><td>${amtKo(A.amount)}</td></tr><tr><th>1차계약금액</th><td class="colon">:</td><td>${amtKo(F.amount)}</td></tr>`
+    :`<tr><th>계 약 금 액</th><td class="colon">:</td><td>${amtKo(A.amount)}</td></tr>`}
+<tr><th>계약년월일</th><td class="colon">:</td><td>${fKo(P.contractDate)}</td></tr>
+<tr><th>착공년월일</th><td class="colon">:</td><td>${fKo(P.startDate)}</td></tr>
+${endLines}</table>
+<div class="sp"></div><p class="stmt">상기와 같이 착공하였기에 착공계를 제출합니다.</p>
+<div class="sp"></div><div class="date-c">${fKo(subDate())}</div><div class="sp"></div>
+${sigBlock()}<div class="sp"></div>${toLine()}<div style="height:20px"></div></div>`}];}
+
+/* ---------- 4. 예정공정표 ---------- */
+function D_sched(sk){const s=P.scopes[sk];const rows=schedRows(sk);const mons=months(sk);const lab=scopeLabel(sk);
+  const step=mons.length<=24?1:mons.length<=48?2:mons.length<=72?3:6;
+  if(mons.length&&step>1){const g=[];mons.forEach(M=>{const key=M.y*12+Math.floor(M.m/step)*step;const last=g[g.length-1];if(last&&last.key===key){last.me=M.me;last.m1=M.m;}else g.push({key,y:M.y,m:M.m,m1:M.m,ms:M.ms,me:M.me});});mons.length=0;mons.push(...g);}
+  const unitLabel={1:'',2:'2개월 단위',3:'분기 단위',6:'반기 단위'}[step];
+  const colW=(1123-80-190-44-46)/Math.max(mons.length,1);const sumFs=colW<26?8.5:colW<34?9.5:10.5;
+  const fmtSum=v=>{if(!v)return '';return colW<34?String(Math.round(v*10)/10):fmtPct(v);};
+  const headLabel=M=>step===3?`${Math.floor(M.m/3)+1}분기`:step===6?(M.m<6?'상반기':'하반기'):step===1?`${M.m+1}${mons.length>18?'':'월'}`:(M.m===M.m1?`${M.m+1}`:`${M.m+1}~${M.m1+1}`);
+  if(!mons.length)return [{page:`<div class="std"><h1 class="dt md">공사예정공정표</h1><div class="sp"></div><p class="stmt">착공일과 ${lab?lab+' ':''}준공예정일을 입력하면 공정표가 그려집니다.</p><div class="sp"></div></div>`,land:true}];
+  const dist=rows.map(r=>distribute(r,mons));const sub=mons.map((_,i)=>dist.reduce((a,d)=>a+d[i].v,0));let acc=0;const cum=sub.map(v=>(acc+=v));
+  const tw=rows.reduce((a,r)=>a+r.w,0);
+  const avail=430;const rh=Math.max(18,Math.min(34,Math.floor(avail/Math.max(rows.length,1))));
+  const yrs={};mons.forEach(M=>{yrs[M.y]=(yrs[M.y]||0)+1;});
+  const small=mons.length>18;
+  return [{land:true,page:`<div style="display:flex;flex-direction:column;height:100%">
+<h1 class="dt md" style="font-size:24px">공 사 예 정 공 정 표${lab?` ( ${lab} )`:''}</h1>
+<div style="display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--doc-g);font-size:13px;margin:10px 0 6px">
+<div>공 사 명 : <b>${esc(P.name)}</b><br>공사기간 : ${fKo(P.startDate)} ~ ${fKo(s.end)} (착수일로부터 ${daysIncl(P.startDate,s.end)}일)${unitLabel?`&nbsp;&nbsp;·&nbsp;&nbsp;공정 구분 : ${unitLabel}`:''}</div>
+<div>${esc(C.name)}&nbsp;&nbsp;대표이사&nbsp;&nbsp;${spaced(C.ceo)}&nbsp;${sealHtml()}</div></div>
+<table class="gantt"><colgroup><col style="width:190px"><col style="width:44px">${mons.map(()=>'<col>').join('')}<col style="width:46px"></colgroup>
+<thead><tr><th rowspan="2">공&nbsp;&nbsp;&nbsp;종</th><th rowspan="2">보할<br>(%)</th>${Object.entries(yrs).map(([y,n])=>`<th colspan="${n}">${y}년</th>`).join('')}<th rowspan="2">비고</th></tr>
+<tr>${mons.map(M=>`<th style="font-weight:400;font-size:${colW<30?9.5:11.5}px;padding:0 1px;white-space:nowrap">${headLabel(M)}</th>`).join('')}</tr></thead>
+<tbody>${rows.map((r,ri)=>`<tr style="height:${rh}px"><td class="nm">${esc(r.name)}</td><td>${fmtPct(r.w)}</td>${dist[ri].map(c=>`<td class="cell">${c.w?`<div class="gb" style="left:${c.l}%;width:${c.w}%"></div>${rh>=24&&!small?`<span class="gv">${fmtPct(c.v)}</span>`:''}`:''}</td>`).join('')}<td></td></tr>`).join('')}
+<tr class="sum"><td>소&nbsp;&nbsp;&nbsp;계</td><td>${fmtPct(tw)}</td>${sub.map(v=>`<td style="font-size:${sumFs}px;padding:0 1px">${fmtSum(v)}</td>`).join('')}<td></td></tr>
+<tr class="sum"><td>누&nbsp;&nbsp;&nbsp;계</td><td></td>${cum.map(v=>`<td style="font-size:${sumFs}px;padding:0 1px">${fmtSum(v)}</td>`).join('')}<td></td></tr></tbody></table>
+<div class="gnote">※ 보할은 공종별 내역금액 비율로 산정 (고정공종 제외 ${r2(100-[...FIXED_ROWS,...FIXED_TAIL].reduce((a,[k])=>a+num(s.sched.fixed[k].w),0))}% 배분). 상기 일정은 현장상황 및 타분야 연계공정에 따라 변동될 수 있음.</div></div>`}];}
+
+/* ---------- 5. 현장대리인 선임계 ---------- */
+function D_agent(){const a=ag();return [{page:`<div class="std"><div style="height:30px"></div><h1 class="dt md">현장대리인 선임계</h1><div style="height:50px"></div>
+<table class="kv big">
+<tr><th>공 사 명</th><td class="colon">:</td><td>${esc(P.name)}</td></tr>
+<tr><th>성 명</th><td class="colon">:</td><td>${spaced(a.name)}</td></tr>
+<tr><th>주 소</th><td class="colon">:</td><td>${esc(a.addr)}</td></tr>
+<tr><th>자 격 종 목</th><td class="colon">:</td><td>${esc(a.licType)}</td></tr>
+<tr><th>자 격 등 급</th><td class="colon">:</td><td>${esc(a.licGrade)}</td></tr>
+<tr><th>자 격 번 호</th><td class="colon">:</td><td>${esc(a.licNo)}</td></tr>
+<tr><th>주 민 번 호</th><td class="colon">:</td><td>${rrnMask(a.rrn6,a.rrn1)}</td></tr></table>
+<div style="height:24px"></div>
+<p class="stmt l">상기와 같이 현장대리인을 선정하여 상기의 공사현장에 상주하게 하며, 공사감독관의 지시에 따라 공사현장의 관리 및 단속에 임하게 하고 회사를 대표하여 현장의 모든 권한을 위임 행사하도록 하였기에 현장대리인계를 제출합니다.</p>
+<table class="kv" style="margin-top:14px;font-size:15.5px"><tr><th style="width:90px">붙 임</th><td class="colon">:</td><td>1. 재직증명서 1부.<br>2. 자격증사본 1부.<br>3. 경력확인서 1부.</td></tr></table>
+<div class="sp"></div><div class="date-c">${fKo(subDate())}</div><div class="sp"></div>${sigBlock()}<div class="sp"></div>${toLine()}<div style="height:20px"></div></div>`}];}
+
+/* ---------- 6. 재직증명서 ---------- */
+function D_employ(){const a=ag();return [{page:`<div class="std">
+<div style="font-size:13.5px">발급번호 : ${esc(a.certNo)}</div><div style="height:40px"></div>
+<h1 class="dt">재 직 증 명 서</h1><div style="height:50px"></div>
+<table class="fm thick" style="font-size:15.5px"><colgroup><col style="width:19%"><col style="width:31%"><col style="width:19%"><col style="width:31%"></colgroup>
+<tr style="height:54px"><th>성 명</th><td class="c">${spaced(a.name)}</td><th>입 사 일 자</th><td class="c">${fDot(a.joinDate)}</td></tr>
+<tr style="height:54px"><th>주민등록번호</th><td class="c">${rrnMask(a.rrn6,a.rrn1)}</td><th>직 위</th><td class="c">${esc(a.position)}</td></tr>
+<tr style="height:54px"><th>현 주 소</th><td colspan="3">${esc(a.addr)}</td></tr>
+<tr style="height:54px"><th>근 무 부 서</th><td colspan="3">${esc(a.dept)}</td></tr>
+<tr style="height:54px"><th>재 직 기 간</th><td colspan="3">${fKo(a.joinDate)}&nbsp;&nbsp;&nbsp;~&nbsp;&nbsp;&nbsp;현 재</td></tr>
+<tr style="height:54px"><th>용 도</th><td colspan="3">착공계 제출용</td></tr></table>
+<div class="sp"></div><p class="stmt">상기와 같이 재직하고 있음을 증명합니다.</p><div class="sp"></div>
+<div class="date-c">${fKo(subDate())}</div><div class="sp2"></div>
+<div class="lfoot" style="font-size:20px">${esc(C.name)}&nbsp;&nbsp;대표이사&nbsp;&nbsp;&nbsp;${spaced(C.ceo,'&nbsp;&nbsp;&nbsp;')}&nbsp;&nbsp;${sealHtml()}</div><div style="height:40px"></div></div>`}];}
+
+/* ---------- 첨부 (이미지) ---------- */
+function D_attach(kind,title){const ids=(P.attach[kind]||[]).slice();const per=kind==='sealCert'?1:(+P.attachLayout[kind]||1);
+  if(!ids.length)return [{page:`<div class="attach"><div class="lab"><b>${esc(title)}</b><span>${esc(P.name)}</span></div><div class="im"><div class="empty">${esc(title)} 이미지를 올려주세요<br><small>「인원」 탭이나 「첨부·인감」 탭에서 스캔본·사진을 올리면 원본대조필과 함께 이 자리에 들어갑니다.</small><br><small>(올리지 않으면 내보내기에서 이 서류는 빠집니다)</small></div></div></div>`,empty:true}];
+  const stamp=kind!=='sealCert'?`<div class="wonbon"><div class="t">원본대조필</div><div class="c">${esc(C.name)} 대표 ${esc(C.ceo)} ${sealHtml()}</div></div>`:'';
+  const one=id=>`<div class="ai">${imgCache[id]?`<img src="${imgCache[id]}" alt="">`:'<div class="empty">이미지 불러오는 중…</div>'}${stamp}</div>`;
+  const pages=[];for(let i=0;i<ids.length;i+=per)pages.push(ids.slice(i,i+per));
+  return pages.map((grp,i)=>({page:`<div class="attach"><div class="lab"><b>${esc(title)}${pages.length>1?` (${i+1}/${pages.length})`:''}</b><span>${esc(P.name)}</span></div>
+<div class="im${grp.length>1?' two':''}">${grp.map(one).join('')}</div></div>`}));}
+
+/* ---------- 안전관리자 선임계 (전기공사업법 시행규칙 별지 제21호서식) ---------- */
+function D_safetyMgr(){const s=safetyPerson();return [{page:`<div class="std">
+<div class="formno"><span>■ 전기공사업법 시행규칙 [별지 제21호서식]</span><span></span></div><div style="height:30px"></div>
+<h1 class="dt md">안전관리자 선임계</h1><div style="height:40px"></div>
+<table class="fm thick"><colgroup><col style="width:18%"><col style="width:24%"><col style="width:28%"><col style="width:30%"></colgroup>
+<tr style="height:60px"><th>공 사 명</th><td colspan="3">${esc(P.name)}</td></tr>
+<tr style="height:60px"><th>공사현장</th><td colspan="3">${esc(P.site)}</td></tr>
+<tr style="height:44px"><th rowspan="2">안전관리자</th><th>성 명</th><th>기술자 등급</th><th>자격(경력)수첩 번호</th></tr>
+<tr style="height:60px"><td class="c">${spaced(s.name)}</td><td class="c">${esc(s.grade)}</td><td class="c">${esc(s.licNo)}</td></tr></table>
+<div style="height:40px"></div><p class="stmt">상기와 같이 안전관리자를 정하였기에 안전관리자 선임계를 제출합니다.</p>
+<div class="sp"></div><div class="date-c">${fKo(subDate())}</div><div class="sp"></div>${sigBlock()}<div class="sp"></div>${toLine()}
+<div style="text-align:right;font-size:11px;font-family:var(--doc-g);margin-top:20px">210mm×297mm[일반용지 60g/㎡(재활용품)]</div></div>`}];}
+
+/* ---------- 계획서 공통: 공사개요 ---------- */
+function overviewBlocks(kind){const A=P.scopes.all,F=P.scopes.first;const t=tradeWord();
+  const period=`${fDot(P.startDate)} ~ ${fDot(A.end)}${P.longTerm?` (1차분 : ${fDot(P.startDate)} ~ ${fDot(F.end)})`:''}`;
+  const purpose=kind==='safety'?`본 안전관리계획서는 "${esc(P.name)}"에 수반되는 안전관리 및 제반 활동을 기술하여 안전하고 양질의 시공을 하는 데 그 목적이 있다.`
+    :`본 품질관리계획서는 "${esc(P.name)}"에 수반되는 품질관리 기준 및 제반 ${t}기술기준에 적합하게 시공함을 원칙으로 하고, 부실시공 방지에 최선을 다하여 안전하고 신뢰성 있는 시설물을 공급하고자 한다.`;
+  const scope=kind==='safety'?`본 안전관리계획서는 "${esc(P.name)}"에 적용한다.`:`본 품질관리계획서는 "${esc(P.name)}" 현장의 시공 및 품질관리 업무를 수행하는 모든 직원 및 협력업체에 적용한다.`;
+  return [
+    {block:`<div class="h1">1. 공사개요</div><div class="h3">1. 1 목 적</div><p class="pp">${purpose}</p>`},
+    {block:`<div class="h3">1. 2 적용범위</div><p class="pp">${scope}</p>`},
+    {block:`<div class="h3">1. 3 공사개요</div><p class="pi">가. 공 사 명 : ${esc(P.name)}</p><p class="pi">나. 공사기간 : ${period}</p><p class="pi">다. 공사위치 : ${esc(P.siteDesc||P.site)}</p><p class="pi">라. 시공수량</p>${(P.works.length?P.works:[{name:'(시공수량을 입력하세요)',qty:''}]).map((w,i)=>`<p class="pi2">${i+1}) ${esc(w.name)}${w.qty?` : ${esc(w.qty)}`:''}</p>`).join('')}`}];}
+function planCover(title,toc){return [
+  {page:`<div class="std" style="text-align:center"><div style="height:170px"></div><div class="dt" style="font-size:36px;letter-spacing:.4em;margin-left:.4em">${title}</div><div style="height:30px"></div><div style="font-size:19px;font-weight:700">[ ${esc(P.name)} ]</div><div class="sp"></div>${sigBlock()}<div style="height:60px"></div></div>`},
+  {page:`<div class="std"><div style="height:40px"></div><h1 class="dt md">목 차</h1><div class="toc">${toc.map(([s,t])=>`<div class="${s?'s':''}">${esc(t)}</div>`).join('')}</div></div>`}];}
+
+/* ---------- 안전관리계획서 ---------- */
+const SAFE_TOC=[[0,'1. 공사개요'],[1,'1. 1 목적'],[1,'1. 2 적용범위'],[1,'1. 3 공사개요'],[0,'2. 안전관리조직'],[0,'3. 비상연락망'],[0,'4. 안전관리 세부계획'],[1,'4. 1 안전목표'],[1,'4. 2 현장 안전관리 주요활동'],[1,'4. 3 개인착용 안전장구명세'],[1,'4. 4 현장안전관리 조직 및 임무'],[1,'4. 5 안전보건 교육 및 점검'],[1,'4. 6 안전관리'],[1,'4. 7 공정별 안전관리계획'],[1,'4. 8 위험요인별 안전대책'],[1,'4. 9 현장 내 화재사고 예방대책'],[1,'4.10 추락·전도위험 예방대책']];
+const HAZ=[
+ ['1. 자재 및 공구의 취급',['개인 역량 이상의 중량물 운반으로 인한 부상','장척물 운반 시 충전부 접촉 우려','취급 부주의로 인한 안전사고 발생'],['작업원 개인역량(30kg) 이상의 중량물은 취급하지 않도록 한다.','시야를 가릴 정도의 큰 짐이나 파이프·목재 등 장척물을 운반할 경우 반드시 작업책임자의 지시에 따른다.','복장을 단정히 하고 필요한 안전장구를 착용하며, 사용법과 성능을 숙지하고 사용범위를 초과하여 사용하지 않는다.','전기·유압식·공기식 공구는 경험이 있는 작업원이 사용하고, 불안전한 공기구는 즉시 사용을 중지한다.','고소작업 시 자재나 공구를 던지지 않고 반드시 공구주머니를 이용하여 운반한다.']],
+ ['2. 작업 준비',['차량 운행 시 교통사고','장비·자재 운송 시 안전사고','안전의식 결여','환절기 건강상태 저하'],['충분한 휴식 후 차량을 운행하고 운행 전 작업장소를 숙지한다.','방어운전 및 교통법규를 준수하고 장비·자재 탑재 시 중량 초과를 금지한다.','과중량 시 지게차 등 장비를 사용하며 2인 1조 작업, 적재물 견고히 고정한다.','충분한 사전 안전교육을 실시하고 신체적·정신적 불안자는 작업에서 제외한다.','일교차가 큰 시기에는 체온을 보호할 수 있는 작업복을 지참하고 충분한 수면을 취한다.']],
+ ['3. 설치 공사',['고소작업에 따른 추락','낙하물로 인한 지상 작업자 부상','고소에서 중량물 취급에 따른 위험'],['작업장 구획 로프를 설치하고 작업구역 및 이동통로를 지정한다.','고소작업 시 안전장구 착용 및 보조로프 활용을 철저히 한다.','지상작업자는 안전모를 반드시 착용하여 낙하물로 인한 부상을 방지한다.','기기류를 높은 장소로 운반할 때는 충분한 중량에 견디는 지지공구를 사용하고 작업책임자의 지시에 따른다.']],
+ ['4. 배관 · 배선',['작업에 대한 이해 부족','개인 보호구 미착용','전동공구 사용 시 안전사고'],['작업 전 충분한 사전교육 및 실습을 실시한다.','주기적으로 개인 안전장구를 점검하고 미착용 시 경고 조치한다.','충분한 작업 동선 및 공간을 확보하고 출입이 허가된 장소만 출입한다.','작업 전 전동공구 절연상태를 점검하고 찔림·잘림에 주의한다.']],
+ ['5. 장비 · 기구류 설치',['장비 운반·설치 시 낙하','누전 및 감전에 의한 사고','안전의식 결여'],['무리한 운반 및 개인 운반을 절대 금지한다.','안전장갑 및 안전화 착용 후 작업하고 장비는 흔들림 없이 견고히 고정한다.','작업 전 반드시 절연상태를 점검하고 감독관(감리)의 지시에 따라 작업한다.','작업장에서 뛰거나 장난하는 행위를 엄금한다.']],
+ ['6. 접지장치',['압착공구 사용 시 부주의로 인한 부상','접지선 풀림에 의한 부상'],['접지 슬리브·단자 압축 시 압착공구에 손이 다치지 않도록 주의한다.','접지선 포설 시 풀림에 의한 부상이 없도록 주의한다.']],
+ ['7. 공사용 임시전기설비',['감전','배선 손상'],['접촉 우려가 있는 배선은 절연피복전선 또는 이동전선을 사용하고 접속부는 반드시 절연한다.','차량통행 등으로 전선이 손상되지 않도록 조치하고 분전함 결선은 견고히 한다.','매일 작업 완료 후 임시전원은 반드시 철거·정리한다.']],
+ ['8. 기타',['개구부 추락','이동 중 충돌','작업자 간 의사소통 부족'],['건물 내·외부 각종 개구부에는 바리케이드나 덮개를 설치한다.','자재·공구 운반 시 장애물을 사전 확인하고, 높은 곳으로 운반할 때는 지상 신호자를 배치한다.','작업을 위해 해체한 울타리는 작업 당일 즉시 재설치한다.','작업자 간 원활한 통화를 위해 휴대 가능한 통신장비(무전기, 휴대폰 등)를 준비한다.']]];
+function hazTable(g,first){return `<table class="fm small" style="${first?'':'border-top:0'}">${first?'<colgroup><col style="width:40%"><col style="width:60%"></colgroup><tr><th>위 험 요 인</th><th>안 전 대 책</th></tr>':'<colgroup><col style="width:40%"><col style="width:60%"></colgroup>'}
+<tr><td style="vertical-align:top"><b>${esc(g[0])}</b>${g[1].map((h,i)=>`<div style="padding-left:1em">(${'가나다라마바'[i]}) ${esc(h)}</div>`).join('')}</td><td style="vertical-align:top">${g[2].map((h,i)=>`<div style="padding-left:1.3em;text-indent:-1.3em">${'①②③④⑤⑥⑦⑧'[i]} ${esc(h)}</div>`).join('')}</td></tr></table>`;}
+/* 4.7 공정별 안전관리계획: 업종별 기본값 + 직접 수정 */
+const P47_COMMON=[
+ ['일반 안전대책',['매일 작업원의 건강상태를 파악하여 불안전한 경우 작업에서 제외한다.','확실한 작업지시를 하고 작업내용 인지 여부를 확인한다.','고소작업 시 부적당한 질병자는 제외하며 지상에 별도의 감시자를 둔다.','작업 완료 후 뒷정리를 철저히 하여 위해요소가 남지 않도록 한다.','모든 작업은 공사감독자의 지시에 따르며 계획에 없는 무단작업을 근절한다.','안전장구는 공인 검정품을 사용하고 작업 시 개인별 안전장구를 반드시 착용한다.','작업장에 안전관리수칙, 안전표시물 및 작업구획 표시용구를 설치한다.']],
+ ['작업 전 점검',['작업 전 안전회의(TBM)를 실시하고 기록을 유지한다.','작업 내용·방법·순서를 검토하고 작업자에게 숙지시킨다.','작업자를 적정 배치하고 안전작업 순서 및 충전부 여부를 확인한다.','공기구·안전장구·복장을 사전 점검한다.','작업구획을 설정하고 공사표지판을 부착한다.','기후·장소·고소·협소 등 작업여건과 작업자의 신체·정신 상태를 확인한다.']],
+ ['작업 중 점검',['불안전 행위 및 불안전 상태를 수시로 점검한다.','점심식사 후 안전작업 및 현장상태를 재점검한다.','작업원의 안전장비 사용 및 작업자세를 감시한다.','공구 및 안전장비의 적정 사용 여부를 감시한다.']],
+ ['작업 후 확인',['작업인원을 확인한다.','작업 완료 상태를 확인한다.','뒷정리 및 잔재물 정리 상태를 확인한다.','임시전원 차단 및 화기 단속 상태를 확인한다.']]];
+const P47_TRADE={
+ '전기':['공종별 안전대책 (전기공사)',['정전작업 시 개폐기 개방 후 잠금·표지(LOTO)를 하고, 검전 및 단락접지 후 작업한다.','활선 근접작업 시 절연용 방호구를 설치하고 절연장갑 등 보호구를 착용하며 접근한계거리를 유지한다.','수변전설비 작업은 작업책임자 입회하에 2인 1조로 하고 충전부를 방호한다.','분전반·배선 작업 시 전원 차단을 확인하고 「작업중」 표지를 부착한다.','전선관·케이블트레이 설치 등 고소작업 시 이동식비계·고소작업대의 안전난간과 안전대를 사용한다.','케이블 포설 시 드럼을 고정하고 신호체계를 유지하며 협착에 주의한다.','절연저항·접지저항 측정 등 시험 시 시험구역 출입을 통제한다.','임시전기설비에는 누전차단기를 설치하고 외함을 접지한다.']],
+ '통신':['공종별 안전대책 (통신공사)',['맨홀·관로 작업 시 산소·유해가스 농도를 측정하고 환기 후 출입하며 감시인을 배치한다.','전주·가공선로 작업 시 승주 전 전주 상태를 점검하고 안전대를 사용하며 하부 출입을 통제한다.','광케이블 접속·측정 시 레이저광을 직접 보지 않으며 광섬유 파편은 별도 용기에 수거한다.','통신랙·장비 설치 시 전도방지 고정을 하고 중량물은 2인 이상이 운반한다.','천장 내 배선 시 이동식비계·사다리의 전도를 방지하고 안전대를 사용한다.','운용 중인 통신·전력설비 인접 작업 시 회선을 확인하고 감독관 승인 후 작업한다.','CCTV·방송 등 옥외설비 고소 설치 시 고소작업대를 사용하고 낙하물 방지 조치를 한다.','장비 전원 연결 시 전원 차단을 확인하고 접지를 연결한다.']],
+ '소방':['공종별 안전대책 (소방공사)',['배관 용접·용단 시 화재감시자를 배치하고 소화기 비치 및 불티 비산방지 조치를 한다.','배관 인양·설치 시 체인블록 등 인양기구를 점검하고 중량물 취급에 주의한다.','감지기·헤드 설치 등 고소작업 시 이동식비계와 안전대를 사용한다.','수압시험 시 배관 체결 상태를 확인하고 시험구역을 통제한다.','수신기·감시제어반 결선 시 전원 차단을 확인한다.','소화약제 취급 시 보호구를 착용하고 오방출을 방지한다.']]};
+function plan47Default(){const t=P47_TRADE[P.trade]||P47_TRADE['전기'];return [...P47_COMMON,t].map(([title,items])=>({title,body:items.join('\n')}));}
+function plan47Data(){return Array.isArray(P.plan47)&&P.plan47.length?P.plan47:plan47Default();}
+function plan47Blocks(){const L='가나다라마바사아자차카타파하';const N='①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳';
+  return plan47Data().map((sec,i)=>{const items=String(sec.body||'').split('\n').map(x=>x.trim()).filter(Boolean);
+    return {block:`${i===0?'<div class="h3">4. 7 공정별 안전관리계획</div>':''}<p class="pi">${L[i]||(i+1)}. ${esc(sec.title)}</p>${items.map((t,j)=>`<p class="pi2">${N[j]||'('+(j+1)+')'} ${esc(t)}</p>`).join('')}`};});}
+function orgAuto(){const s=safetyPerson(),g=gmPerson();return {boxes:[{lv:1,t:'대표이사',n:C.ceo},{lv:2,t:'산업안전보건 총괄책임자',n:g.name},{lv:3,t:'현장대리인',n:P.agent.name},{lv:4,t:'안전관리담당자',n:s.name},{lv:5,t:'작업반',n:'직영 근로자'+(P.workers.length?` ${P.workers.length}명`:'')}],
+  left:{on:true,t:'발주처 감독관',n:P.inspector||'',lv:2},right:{on:true,t:'감리단',n:P.emergency.supervisor||P.via||'',lv:2}};}
+function orgData(){return P.org.custom?P.org:orgAuto();}
+function orgChart(){const o=orgData();const lvOf=b=>Math.max(1,Math.round(num(b.lv))||1);const lvls=[...new Set(o.boxes.map(lvOf))].sort((a,b)=>a-b);
+  if(!lvls.length)return '<div class="org"><div class="b">조직도 상자를 추가하세요</div></div>';
+  const box=(b,m)=>`<div class="b${m?' m':''}"><small>${esc(b.t)}</small>${esc(b.n)||'&nbsp;'}</div>`;
+  const side=sd=>`<div class="side"><small>${esc(sd.t)}</small><br>${esc(sd.n)||'—'}</div>`;
+  const anyL=o.left&&o.left.on&&lvls.includes(lvOf(o.left)),anyR=o.right&&o.right.on&&lvls.includes(lvOf(o.right));
+  return `<div class="org">${lvls.map((lv,i)=>{const bs=o.boxes.filter(b=>lvOf(b)===lv);const multi=bs.length>1;
+    const grp=multi?`<div class="lvl">${bs.map(b=>`<div class="nd">${box(b,true)}</div>`).join('')}</div>`:box(bs[0]);
+    const L=anyL&&lvOf(o.left)===lv,R=anyR&&lvOf(o.right)===lv;
+    const row=(L||R)?`<div class="row">${L?side(o.left)+'<div class="h"></div>':(anyR?'<div class="sidesp"></div>':'')}${grp}${R?'<div class="h"></div>'+side(o.right):(anyL?'<div class="sidesp"></div>':'')}</div>`:grp;
+    return (i?'<div class="v"></div>':'')+row;}).join('')}</div>`;}
+function contactTable(){const e=P.emergency,s=safetyPerson();const rows=[['발주처','감독관',P.inspector,e.inspectorTel],['감리단',e.supervisor||P.via,'',e.supervisorTel],['본사',C.name,C.ceo,C.tel],['현장','현장대리인',P.agent.name,P.agent.phone],['현장','안전관리담당자',s.name,s.phone||P.agent.phone],['의료기관',e.hospital,'',e.hospitalTel],['소방서',e.fire,'',e.fireTel],['경찰서',e.police,'',e.policeTel]];
+  return `<div class="flow"><span class="b">사고 발생</span>→<span class="b">현장대리인·안전관리자</span>→<span class="b">응급조치 / 119·병원 이송</span>→<span class="b">감독관·감리단 보고</span>→<span class="b">본사 보고·사고조사</span></div>
+<table class="fm small"><colgroup><col style="width:16%"><col style="width:34%"><col style="width:20%"><col style="width:30%"></colgroup><tr><th>구 분</th><th>소속 / 기관</th><th>성 명</th><th>연 락 처</th></tr>${rows.map(r=>`<tr style="height:30px"><td class="c">${esc(r[0])}</td><td>${esc(r[1])}</td><td class="c">${esc(r[2])}</td><td class="c">${esc(r[3])}</td></tr>`).join('')}</table>`;}
+function D_safetyPlan(){const B=(h)=>({block:h});const out=planCover('안전관리계획서',SAFE_TOC);
+  const items=[...overviewBlocks('safety'),
+    B(`<div class="h1" style="margin-top:14px">2. 안전관리조직</div>${orgChart()}<p class="pp" style="font-size:13px">※ 산업안전보건 총괄책임자 선임계 붙임</p>`),
+    B(`<div class="h1" style="margin-top:14px">3. 비상연락망</div>${contactTable()}`),
+    {block:`<div class="h1">4. 안전관리 세부계획</div><div class="h3">4. 1 안전목표</div><table class="fm small"><colgroup><col style="width:38%"><col style="width:62%"></colgroup><tr><th>안 전 목 표</th><th>세 부 목 표</th></tr><tr><td style="line-height:2">1. 인간존중<br>2. 경영활동 안전관리 우선<br>3. 안전시공 추구<br>4. 안전 선진화 실현<br>5. 무재해 달성</td><td style="line-height:1.8">• 인명의 안전 확보<br>• 교육 및 훈련 철저<br>• 비상 시 대처능력 유지<br>• 품질방침에 기술된 원칙에 적합한 시스템 관리 및 유지<br>• 발생 가능한 모든 위험에 대비한 적절한 조치 및 미비사항 시정조치<br>• 사고 및 준사고에 대한 신속하고 정확한 보고<br>• 감리단과 상호 의견교환 및 부적합 사항의 시정조치</td></tr></table>`,newPage:true},
+    B(`<div class="h3">4. 2 현장 안전관리 주요활동</div>${['공사 진행 시 투입되는 당사 인원은 해당 감독관의 지시에 순응하게 하고, 안전상의 문제는 일차적으로 해당 감독관의 승인을 득한 후 공사를 진행한다.','안전관리 담당자는 본 공사의 안전관리 총책임자로 하고, 부책임자를 지정하여 공사에 투입되는 당사 인원의 안전관리를 전담하도록 한다.','매일 공사 종료 후 현장 안전관리 및 공사 책임자는 해당 감독관에게 당일의 안전관리상 문제를 보고하고, 명일 작업 및 예정사항과 안전관리상 유의점을 지시받는다.','매일 현장 투입 전 작업인원의 신체 상태와 장구 상태를 점검하고 금일 작업사항을 설명하여 안전사고를 미연에 방지한다.','현장에 투입하는 인원은 반드시 안전모를 착용하게 하고 해당 작업에 필요한 안전장비를 투입한다.','사고 발생에 대비하여 구급상비약을 준비하고 인근 병원으로 이송할 수 있도록 한다.'].map((t,i)=>`<p class="pi">${'가나다라마바'[i]}. ${t}</p>`).join('')}`),
+    B(`<div class="h3">4. 3 개인착용 안전장구명세</div><p class="pi">가. 개인착용 안전장구 : ① 안전모 ② 안전허리띠 ③ 안전허리띠 로프 ④ 안전화 ⑤ 보조로프 ⑥ 각반</p><p class="pi">나. 복장</p><p class="pi2">㉠ 간편하고 단정한 복장을 하며, 신발끈은 밖으로 노출시키지 않는다. 뺀치·칼·드라이버·스패너 등 개인공구는 공구꽂이에 넣어 휴대하고 필요한 안전장구는 반드시 휴대한다.</p><p class="pi2">㉡ 단추가 떨어진 작업복, 몸에 맞지 않는 큰 옷이나 끌리는 바지, 미끄러운 장소의 징 박은 구두, 기름 묻은 장소의 고무창 신발, 머리에 완전히 고정되지 않는 안전모는 착용하지 않는다.</p><p class="pi">다. 안전장구</p><p class="pi2">㉠ 공구는 사용 전 반드시 점검하여 흠이 있거나 마모된 것은 사용하지 않으며, 체인블록·윈치·잭 등 강도를 요하는 공구는 특히 세밀히 점검한다.</p><p class="pi2">㉡ 공구는 본래의 용도에만 사용하고, 안전허리띠 등 안전장구는 사용 전 점검하여 안전함을 확인한다.</p><p class="pi2">㉢ 공구 및 안전장구의 사용목적과 사용방법을 사전에 충분히 숙지한다.</p>`),
+    B(`<div class="h3">4. 4 현장안전관리 조직 및 임무</div><table class="fm small"><colgroup><col style="width:26%"><col style="width:74%"></colgroup><tr><th>구 분</th><th>임 무</th></tr>
+<tr><td class="c">안전보건관리책임자</td><td>산업재해 예방계획 수립 / 안전보건관리규정 작성 / 근로자 안전보건교육 / 작업환경 점검 및 개선 / 근로자 건강진단 등 보건관리</td></tr>
+<tr><td class="c">현장대리인</td><td>급박한 위험 시 작업중지 및 재개 / 종합안전계획 수립·시행 / 도급사업 안전·보건조치 / 안전관리비 집행 감독 및 협의조정 / 유해·위험기계 사용 시 안전 확인</td></tr>
+<tr><td class="c">안전관리담당자</td><td>안전교육 계획 수립·시행 / 사업장 순회점검·지도 및 조치 건의 / 재해원인 조사·대책 수립 및 보고 / 안전수칙 위반자 조치 건의 / 방호조치 및 검사 적격품 선정</td></tr>
+<tr><td class="c">분야별 담당자</td><td>안전장치 및 보호구 구입·배포 / 안전 관련 상벌 평가 및 발의 / 유해위험방지계획서 작성 지도 / 산재 원인분석 및 예방대책 보고</td></tr></table>`),
+    B(`<div class="h3">4. 5 안전보건 교육 및 점검</div><p class="pi">가. 안전교육</p><p class="pi2">• 정기교육 : 관리책임자는 전 근로자에 대하여 매월 2시간 이상 정기 안전보건교육을 실시한다.</p><p class="pi2">• 채용 시 및 작업내용 변경 시 교육 : 신규채용 및 작업내용 변경 시 작업 종사 전 2시간 이상 실시한다.</p><p class="pi2">• 특별교육 : 산업안전보건법령에 따른 유해·위험작업 종사 전 2시간 이상 실시하며, 미이수자는 해당 작업에 종사시키지 않는다.</p>
+<p class="pi">나. 교육 실시 계획</p><p class="pi2">① 현장대리인은 매일 작업 전 안전회의(TBM)를 실시하여 작업내용·방법·구역 및 예상 위험을 교육하고 회의록을 기록·유지한다.</p><p class="pi2">② 수시로 현장 안전계몽 교육을 실시하고, 공정이 바뀔 때마다 작업방법을 충분히 교육한다.</p>
+<p class="pi">다. 기록유지 : 교육 실시 후 이수 확인을 받아 교육일지를 작성·보관하고, 사업 종료 시 안전담당 부서로 이관한다.</p>
+<p class="pi">라. 법정교육 : 관리책임자 및 안전관리자는 법정 직무교육을 이수한다.</p>
+<p class="pi">마. 안전점검</p><p class="pi2">• 정기점검 연 4회 이상, 수시점검(민원 예상·고소작업 현장), 특별점검(중대재해 발생, 위험요인 다수 시)을 실시한다.</p><p class="pi2">• 일일점검으로 장비·차량·시설물을 점검하고, 새로운 장비 반입이나 공정 착수 전 위험요소를 분석하여 특별점검을 실시한다.</p><p class="pi2">• 점검 결과 위험요소가 있는 경우 시정지시서를 발부하고 신속히 시정한다.</p>`),
+    B(`<div class="h3">4. 6 안전관리</div><p class="pi">가. 무재해 운동 : 무재해 및 잠재위험 발굴운동 세부계획을 수립하여 현장 실정에 맞게 추진한다.</p><p class="pi">나. 안전조치 : 작업자의 비적격성, 안전위반 행위, 기구 결손 여부, 작업장 안전상태, 부적당한 작업상태를 확인하고 시정 조치한다.</p><p class="pi">다. 안전표지 : 작업에 적합한 안전수칙과 안전표지를 부착하며, 산업안전보건법 시행규칙의 규정에 따른다.</p><p class="pi">라. 긴급 시 조치 : 산업재해의 급박한 위험이 있을 때에는 즉시 작업을 중지하고 근로자를 대피시킨다.</p><p class="pi">마. 휴무 중 안전조치 : 2일 이상 휴무 시 순찰 강화, 비상연락망 정비 등 별도의 안전조치를 취한다.</p><p class="pi">바. 유해·위험작업 : 고열·저온·분진·소음·진동·중량물 취급 등 유해·위험작업은 근로시간 제한 및 건강보호 조치를 한다.</p>`),
+    ...plan47Blocks(),
+    ...HAZ.map((g,i)=>B((i===0?`<div class="h3">4. 8 위험요인별 안전대책</div>`:'')+hazTable(g,i===0))),
+    B(`<div class="h3" style="margin-top:10px">4. 9 현장 내 화재사고 예방대책</div><p class="pi">가. 화재감시자 배치 대상 작업 : 작업반경 11m 이내에 가연성 물질이 있는 장소, 바닥 하부 가연성 물질이 불꽃에 의해 쉽게 발화될 우려가 있는 장소, 칸막이·벽·천장 반대편 가연성 물질이 열전도·복사로 발화될 우려가 있는 장소에서의 용접·용단 작업</p><p class="pi">나. 배치 제외 : 동일 장소에서 상시·반복적으로 용접·용단을 하며 경보설비와 소화설비가 갖추어진 경우</p><p class="pi">다. 화재감시자 : 화재 위험을 감시하고 화재 발생 시 근로자 대피를 유도하는 업무만 전담하며, 건설업 기초안전보건교육을 이수한 자로 지정한다.</p><p class="pi">라. 화기작업 시 소화기를 비치하고 작업 후 30분 이상 잔불 여부를 확인한다.</p>`),
+    B(`<div class="h3">4.10 추락·전도위험 예방대책</div><table class="fm small"><colgroup><col style="width:8%"><col style="width:80%"><col style="width:12%"></colgroup><tr><th>번호</th><th>점 검 내 용</th><th>확 인</th></tr>${['추락위험이 있는 장소에 작업발판이 설치되어 있는가','작업발판이나 개구부 덮개는 충분한 강도의 재료로 견고하게 설치되어 있는가','작업발판 및 통로의 끝, 개구부 등 추락위험 장소에 안전난간이 설치되어 있는가','안전대 부착설비 및 안전대의 이상 유무를 작업 시작 전 점검하였는가','안전난간 설치가 곤란한 추락위험 장소에 추락방호망이 설치되어 있는가','이동식사다리는 전도방지 조치 후 2인 1조로 사용하며 최상부 발판에서 작업하지 않는가','근로자는 개인보호구를 올바르게 착용하였는가'].map((t,i)=>`<tr style="height:30px"><td class="c">${i+1}</td><td>${t}</td><td></td></tr>`).join('')}</table>`)];
+  return [...out,{page:`<div style="height:90px"></div><h1 class="dt">안 전 관 리 계 획</h1>`,merge:true},...items];}
+
+/* ---------- 산업안전보건 총괄책임자 선임계 ---------- */
+function D_gm(){const g=gmPerson();return [{page:`<div class="std"><div style="height:30px"></div><h1 class="dt sm">산업안전보건 총괄책임자 선임계</h1><div style="height:40px"></div>
+<table class="fm thick" style="font-size:15.5px"><colgroup><col style="width:24%"><col></colgroup>
+<tr style="height:54px"><th>공 사 명</th><td>${esc(P.name)}</td></tr>
+<tr style="height:54px"><th>주 소</th><td>${esc(g.addr)}</td></tr>
+<tr style="height:54px"><th>성 명</th><td>${spaced(g.name)}</td></tr>
+<tr style="height:54px"><th>생 년 월 일</th><td>${esc(g.birth)}</td></tr>
+<tr style="height:54px"><th>제 출 처</th><td>${esc(P.owner)}</td></tr></table>
+<div style="height:30px"></div><p class="stmt l">상기자를 산업안전보건 총괄책임자로 선정하였기에 관련서류를 첨부하여 제출합니다.</p>
+<div class="sp"></div><div class="date-c">${fKo(subDate())}</div><div class="sp"></div>${sigBlock()}<div class="sp"></div>
+<table class="kv" style="font-size:14px"><tr><th style="width:80px">첨부서류</th><td class="colon">:</td><td>경력증명서, 기술자자격증(수첩) 사본, 재직증명서</td></tr></table><div style="height:20px"></div>${toLine()}<div style="height:20px"></div></div>`}];}
+
+/* ---------- 재해방지책임자 선임계 ---------- */
+function D_disaster(){const d=disasterPerson();return [{page:`<div class="std"><div style="height:10px"></div><h1 class="dt md">재해방지 책임자 선임계</h1><div style="height:30px"></div>
+<table class="fm thick"><colgroup><col style="width:20%"><col style="width:36%"><col style="width:16%"><col style="width:28%"></colgroup>
+<tr style="height:46px"><th>공 사 명</th><td colspan="3">${esc(P.name)}</td></tr>
+<tr style="height:46px"><th>상 호</th><td colspan="3">${esc(C.name)}</td></tr>
+<tr style="height:46px"><th>주 소</th><td colspan="3">${esc(C.addr)}</td></tr>
+<tr style="height:46px"><th>재해방지책임자</th><td>${P.disaster.sameCeo?'대표이사&nbsp;&nbsp;':''}${spaced(d.name)}&nbsp;${sealHtml()}</td><th>생년월일</th><td class="c">${esc(d.birth)}</td></tr></table>
+<p class="stmt l" style="margin-top:16px">상기 공사를 시공함에 있어 재해방지책임자(담당자)를 선임하고 아래와 같이 재해발생에 대한 책임을 각서로 이행하겠습니다.</p>
+<h2 class="dt sm" style="font-size:20px;margin-top:16px;margin-bottom:12px">재해로 인한 책임각서</h2>
+<div class="pledge">&nbsp;&nbsp;재해방지 책임자로 선정된 본인은 본 공사에 있어 시공 중 ${esc(honor())}의 안전작업수칙을 준수하며, 이를 준수하기 위한 작업 안전상의 공기구 및 안전장구를 완비하고 이를 현장 전 종사원에게 사용하도록 하겠으며, 이의 이행에 불응하거나 태만할 때는 ${esc(honor())}에서 본 공사를 중지시켜도 어떠한 이의를 제기하지 않을 것이며, 천재지변 기타 불가항력으로 인한 손해를 제외하고 현장대리인 또는 재해방지 책임자인 본인은 작업현장에 상주하지 않았다고 면책을 주장하지 않을 뿐더러 시공상 발생하는 일체의 재해와 제반 업무의 수행 중 일반 공중에 끼친 피해에 대하여도 즉각적인 사후 수습을 할 것을 연서로 각서합니다.</div>
+<div class="sp"></div><div class="date-c">${fKo(subDate())}</div><div class="sp"></div>
+<div style="margin-left:auto;margin-right:30px;font-size:16px;line-height:2.4">현장대리인&nbsp;&nbsp;:&nbsp;&nbsp;${spaced(P.agent.name,'&nbsp;&nbsp;&nbsp;')}&nbsp;&nbsp;(인)<br>재해방지 책임자&nbsp;&nbsp;:&nbsp;&nbsp;${spaced(d.name,'&nbsp;&nbsp;&nbsp;')}&nbsp;&nbsp;${sealHtml()}</div>
+<div class="sp"></div>${toLine()}<div style="height:10px"></div></div>`}];}
+
+/* ---------- 산업안전보건관리비 사용계획서 ---------- */
+function D_safetyCost(sk){const s=P.scopes[sk];const c=safetyCalc(s);const lab=scopeLabel(sk);return [{page:`<div class="std">
+<div class="formno"><span>[별지 제1호 서식]</span><span>(앞쪽)</span></div>
+<h1 class="dt sm" style="margin:14px 0 18px">산업안전보건관리비 사용계획서${lab?`(${lab})`:''}</h1>
+<table class="fm thick small" style="font-size:13.5px"><colgroup><col style="width:17%"><col style="width:33%"><col style="width:17%"><col style="width:33%"></colgroup>
+<tr style="height:40px"><th>업 체 명</th><td>${esc(C.name)}</td><th>공 사 명</th><td>${esc(P.name)}</td></tr>
+<tr style="height:40px"><th>소 재 지</th><td>${esc(C.addr)}</td><th>대 표 자</th><td>${spaced(C.ceo)}</td></tr>
+<tr style="height:40px"><th>공 사 금 액</th><td class="r">${won(s.amount)}원</td><th>공 사 기 간</th><td>${fDot(P.startDate)} ~ ${fDot(s.end)}</td></tr>
+<tr style="height:40px"><th>발 주 자</th><td>${esc(P.owner)}</td><th>누계공정율</th><td class="r">%</td></tr>
+<tr style="height:46px"><th>계 상 된<br>안전관리비</th><td class="r">${won(c.budget)}원</td><th>사 용 예 정<br>안전관리비</th><td class="r">${won(c.sum)}원</td></tr>
+<tr><th colspan="4" style="height:36px">사 용 계 획 금 액</th></tr>
+<tr style="height:34px"><th colspan="2">항 목</th><th>금 액 (원)</th><th>비 고</th></tr>
+<tr style="height:34px"><td colspan="2" class="c"><b>계</b></td><td class="r"><b>${won(c.sum)}</b></td><td></td></tr>
+${SAFETY_CATS.map(([k,n])=>`<tr style="height:34px"><td colspan="2">${esc(n)}</td><td class="r">${c.cats[k]?won(c.cats[k]):'-'}</td><td></td></tr>`).join('')}</table>
+<p class="stmt l" style="margin-top:18px;font-size:14.5px">「건설업 산업안전보건관리비 계상 및 사용기준」 제10조제1항의 규정에 의하여 위와 같이 사용계획 내역을 작성하였습니다.</p>
+<div class="sp"></div><div class="date-c">${fKo(subDate())}</div><div class="sp"></div>
+<div style="text-align:right;font-size:16px;margin-right:20px">${esc(C.name)}&nbsp;&nbsp;&nbsp;대&nbsp;&nbsp;표 : ${spaced(C.ceo)}&nbsp;&nbsp;${sealHtml()}</div><div class="sp"></div>
+<div style="font-size:11px;font-family:var(--doc-g);text-align:right">210mm×297mm [일반용지 60g/㎡(재활용품)]</div></div>`}];}
+
+/* ---------- 항목별 세부사용계획 ---------- */
+function D_safetyDetail(sk){const s=P.scopes[sk];const c=safetyCalc(s);const lab=scopeLabel(sk);
+  const cg='<colgroup><col style="width:20%"><col style="width:18%"><col style="width:16%"><col style="width:7%"><col style="width:11%"><col style="width:7%"><col style="width:13%"><col style="width:8%"></colgroup>';
+  const blocks=SAFETY_CATS.map(([k,n],ci)=>{const rows=(s.safety[k]||[]).filter(r=>r.name||num(r.price));const list=rows.length?rows:[{}];
+    return {block:`${ci===0?`<h1 class="dt sm" style="font-size:22px;margin:0 0 16px">항목별 세부사용계획${lab?` ( ${lab} )`:''}</h1>`:''}<table class="fm small" style="font-size:12px;${ci?'margin-top:-1px':''}">${cg}${ci===0?'<tr><th rowspan="2">항 목</th><th rowspan="2">일 자</th><th colspan="4">사 용 계 획 내 역</th><th rowspan="2">금 액</th><th rowspan="2">비 고</th></tr><tr><th>품 명</th><th>단위</th><th>단 가</th><th>수량</th></tr>':''}
+${list.map((r,i)=>`<tr style="height:26px">${i===0?`<td rowspan="${list.length+1}" style="vertical-align:middle">${esc(n)}</td>`:''}<td class="c" style="white-space:nowrap;font-size:10.5px">${esc(r.period)}</td><td>${esc(r.name)}</td><td class="c">${esc(r.unit)}</td><td class="r">${r.price!==undefined&&r.price!==''?won(r.price):''}</td><td class="r">${r.qty!==undefined&&r.qty!==''?esc(r.qty):''}</td><td class="r">${num(r.price)*num(r.qty)?won(num(r.price)*num(r.qty)):''}</td><td>${esc(r.note)}</td></tr>`).join('')}
+<tr style="height:26px;background:#f7f7f7"><td colspan="5" class="c"><b>계</b></td><td class="r"><b>${c.cats[k]?won(c.cats[k]):'0'}</b></td><td></td></tr></table>`};});
+  blocks.push({block:`<table class="fm small" style="font-size:12.5px;margin-top:-1px"><colgroup><col style="width:79%"><col style="width:13%"><col style="width:8%"></colgroup><tr style="height:30px;background:#eee"><td class="c"><b>합 계</b></td><td class="r"><b>${won(c.sum)}</b></td><td></td></tr></table><p style="font-size:12px;margin-top:6px;font-family:var(--doc-g)">※ 주 : 사용내역은 항목별 사용일자가 빠른 순서로 작성</p>`});
+  return blocks;}
+
+/* ---------- 품질관리계획서 ---------- */
+const QUAL_TOC=[[0,'1. 공사개요'],[1,'1. 1 목적'],[1,'1. 2 적용범위'],[1,'1. 3 공사개요'],[0,'2. 품질관리 세부계획'],[1,'2. 1 일반사항'],[1,'2. 2 품질관리(보증)'],[1,'2. 3 공종별 품질관리계획'],[1,'2. 4 품질기록 및 관리']];
+const QC_ITEMS={
+ '통신':[['가. 통신케이블 포설(지하, 가공)',['승인된 자재 사용 여부','시방서와 일치된 자재인지 여부','시험성적서 이상 유무'],['허용장력 이내로 균일하게 포설하였는지 여부','굴곡부 허용곡률반경 만족 여부','접속점·분기점 등 필요개소 충분한 여장 확보 여부','외피접지 요구 시 접지 완전 여부']],
+  ['나. 전선관공사',['승인된 자재 사용 여부','전선관·박스 및 부속품 KS 적합 여부'],['굴곡반경·각도 및 굴곡부 상태 규정치 만족 여부','타 배관(가스관, 수관 등)과 이격거리 확보 여부','박스 위치 적정 여부']],
+  ['다. 케이블트레이 공사',['승인된 자재 사용 여부','규격 및 치수의 도면·시방 적합 여부'],['연결 시 적정 부속품 사용 여부','지지간격 및 지지물 적합 여부','케이블 손상 우려 예리한 부분 제거 여부']],
+  ['라. 통신단자 및 아울렛 기구공사',['승인된 자재 사용 여부','규격 및 치수의 도면·시방 적합 여부'],['기구 수평·수직 및 이격상태 양호 여부','견고한 설치 및 배선순번 접속 여부','설치 후 보양조치 여부']],
+  ['마. 광케이블 설치공사',['승인된 자재 사용 여부','규격에 맞는 자재 사용 여부'],['접속손실 기준 만족 여부','포설 시 과도한 굴곡 여부','라벨링 여부']],
+  ['바. 통신단자함 설치공사',['승인된 자재 및 도장·색상 적정 여부','규격에 맞는 자재 사용 여부'],['철판두께 및 내부 부품 도면·시방 적합 여부','함 내 배선 정돈 및 여유공간 확보 여부','절연저항 시험 시행 여부','설치상태(높이, 위치, 수직·수평) 및 견고성']]],
+ '전기':[['가. 전력케이블 포설',['승인된 자재 사용 여부','시험성적서 이상 유무'],['허용장력 이내로 균일하게 포설하였는지 여부','굴곡부 허용곡률반경 만족 여부','단말처리 및 상표시 여부','절연저항 측정 결과 기준 만족 여부']],
+  ['나. 전선관공사',['승인된 자재 사용 여부','전선관·박스 및 부속품 KS 적합 여부'],['굴곡반경·각도 및 굴곡부 상태 규정치 만족 여부','타 배관과 이격거리 확보 여부','박스 위치 적정 여부']],
+  ['다. 케이블트레이 공사',['승인된 자재 사용 여부','규격 및 치수의 도면·시방 적합 여부'],['연결 시 적정 부속품 사용 여부','지지간격 및 지지물 적합 여부','트레이 접지 연결 여부']],
+  ['라. 배선기구 및 조명기구',['승인된 자재 사용 여부','KS 또는 고효율 인증 여부'],['기구 수평·수직 및 견고한 설치 여부','극성 및 결선 적정 여부','점등시험 결과 이상 유무']],
+  ['마. 분전반 및 배전반',['승인된 자재 및 도장·색상 적정 여부','차단기 정격 도면 일치 여부'],['반 내 배선 정돈 및 회로표시 여부','절연저항·접지저항 시험 시행 여부','설치상태(높이, 수직·수평) 및 견고성']],
+  ['바. 접지공사',['접지재료 규격 적합 여부'],['접지저항 측정값 기준 만족 여부','접속부 압착·방식 처리 여부','보호도체 단면적 적정 여부']]],
+ '소방':[['가. 소방배관',['승인된 자재(KFI 인정품) 사용 여부'],['배관 구배 및 지지간격 적정 여부','수압시험 결과 이상 유무']],
+  ['나. 전선관 및 배선',['내화·내열 전선 사용 여부'],['배선 이격 및 보호 적정 여부','절연저항 측정 결과 기준 만족 여부']],
+  ['다. 감지기·발신기',['형식승인품 사용 여부'],['설치 높이 및 감지면적 기준 적합 여부','작동시험 결과 이상 유무']],
+  ['라. 수신기 및 중계기',['형식승인품 사용 여부'],['회로 표시 및 결선 적정 여부','동작·도통시험 결과 이상 유무']],
+  ['마. 소화기구 및 유도등',['형식승인품 사용 여부'],['설치 위치 및 보행거리 기준 적합 여부','점등 및 비상전원 전환 확인']]]};
+function D_quality(){const t=P.trade;const law={'전기':'전기사업법, 전기공사업법 및 한국전기설비규정(KEC)','통신':'정보통신공사업법 및 방송통신설비의 기술기준에 관한 규정','소방':'소방시설공사업법 및 화재안전기술기준(NFTC)'}[t]||'관계 법령 및 기술기준';
+  const items=QC_ITEMS[t]||QC_ITEMS['전기'];const B=h=>({block:h});
+  return [...planCover('품질관리계획서',QUAL_TOC),{page:`<div style="height:90px"></div><h1 class="dt">품 질 관 리 계 획</h1>`,merge:true},...overviewBlocks('quality'),
+   {block:`<div class="h1">2. 품질관리 세부계획</div><div class="h2">2. 1 일반사항</div><p class="pp">시공자는 고품질을 추구하기 위해 관련 시방서 및 설계도서에 입각하여 지속적인 품질보증 활동을 전개하고, 품질에 대한 신뢰성 증가와 원가 절감을 도모하여 합리적·경제적·안정적인 시스템을 구축하는 데 최선을 다한다. 품질에 영향을 미치는 업무를 관리·수행·검증하여 모든 계층에서 부적합 사항을 제거하고 고품질이 유지되도록 관리한다.</p>`,newPage:true},
+   B(`<div class="h3">2.1.1 기본방향</div><p class="pi">가. ${law}을(를) 준수하여 시공함을 원칙으로 하며, 특기사항은 시방서에 의한다.</p><p class="pi">나. 양질의 시공을 위하여 품질관리기준을 준수한다.</p><p class="pi">다. 현장 내에서 발생하는 모든 제반사항은 감독·감리 관계자와 상의하여 적기에 적합하도록 시공한다.</p><p class="pi">라. 회사 내 모든 직원은 기술인의 긍지를 갖고 양질의 시공을 할 수 있도록 제반사항을 지원한다.</p><p class="pi">마. 부적합 사항이 발생할 시는 시정조치한 후 시행한다.</p>`),
+   B(`<div class="h3">2.1.2 품질관리 방안</div><p class="pi">가. 공정 및 품질에 관련된 부적합 발생을 방지하기 위한 초기 조치</p><p class="pi">나. 시공 및 제품 품질에 관련된 문제의 파악</p><p class="pi">다. 지정된 경로를 통한 해결책의 발의, 건의 또는 제시</p><p class="pi">라. 해결책의 실행에 대한 검증</p><p class="pi">마. 불일치 사항이 시정될 때까지 부적합품에 관한 관리</p>`),
+   B(`<div class="h3">2.1.3 품질유지 현장 운영방침</div><p class="pi">가. 철저한 사전 시험을 통한 자재 투입 품질 유지</p><p class="pi">나. 전 직원 품질관리 책임자화</p><p class="pi">다. 적정 품질 유지로 하자율 최소화</p><p class="pi">라. 민원을 사전에 예방할 수 있는 품질관리 유지</p>`),
+   B(`<div class="h2">2. 2 품질관리(보증)</div><div class="h3">2.2.1 품질관리(보증)의 계획수립</div><p class="pi">가. 품질관리계획의 총괄은 현장대리인이 주관하고, 계획 변경·수정 시 공사 감독·감리 관계자와 충분히 협의 후 시행한다.</p><p class="pi">나. 분야별 담당은 계획을 수립하여 현장대리인에게 보고하고 승인을 받은 후 시행한다.</p><p class="pi">다. 현장대리인은 품질관리계획서(수정분 포함)를 관리·보관한다.</p>`),
+   B(`<div class="h3">2.2.2 품질보증 절차</div><table class="fm small"><colgroup><col style="width:24%"><col></colgroup><tr><th>절 차</th><th>세 부 내 용</th></tr><tr><td class="c">계 획 수 립</td><td>품질보증계획서, 품질검사절차서, 시공계획서, 시공관리절차서, 품질관련절차서</td></tr><tr><td class="c">제 출</td><td>감리단의 확인을 받아 공사 착공 전 발주처에 제출</td></tr><tr><td class="c">검 토</td><td>검토 후 보완하여야 할 사항이 있는 경우 보완 요구</td></tr><tr><td class="c">확 인</td><td>감독원은 품질관리를 적정하게 실시하는지 여부를 확인</td></tr><tr><td class="c">완 료</td><td>확인결과 시정이 필요한 경우 시공사는 시정 후 그 결과를 발주처에 통보</td></tr></table>`),
+   B(`<div class="h3">2.2.3 품질검사</div><p class="pp">검사는 계약서에 별도 제시가 있을 경우 그에 따르며, 명시되지 않은 경우 시방 지침 또는 관련 규격의 표준 및 규정에 따라 실시한다. 감독원의 품질검사 활동에 필요한 설비, 성적서, 도면, 목록 및 문서 등을 제공하고 관련 문서를 열람할 수 있도록 하며, 발주처 요구 시 검사에 협조한다.</p><div class="flow"><span class="b">자재 반입</span>→<span class="b">자재검수 요청</span>→<span class="b">감리 검수</span>→<span class="b">시공</span>→<span class="b">검측 요청</span>→<span class="b">감리 검측</span>→<span class="b">합격 시 다음 공정</span></div><p class="pp" style="font-size:13.5px">부적합 판정 시 : 부적합 보고(NCR) → 원인분석 및 시정조치 → 재검사 → 결과 기록·보관</p>`),
+   B(`<div class="h2">2. 3 공종별 품질관리계획</div><p class="pp">공사가 설계도면 및 시방서 등에 일치되게 시공되는지 검사를 통하여 점검·확인함으로써 부주의, 착오, 미확인에 의한 부실시공을 사전에 예방한다. 이를 위해 현장대리인(시공책임자)이 점검·확인한 결과를 검측요청서 및 체크리스트에 기록하여 제출한다.</p><div class="h3">2.3.1 공정별 관리</div><p class="pi">① 공사의 진척사항 ② 특수작업에 대한 안전유무 확인 ③ 작업자의 안전공구 확인 ④ 현장 내 불완전 요소 제거 확인 ⑤ 안전거리 확보 여부 확인</p>`),
+   B(`<div class="h3">2.3.2 자재관리</div><p class="pi">가. 수령된 자재는 종류별·규격별로 선별하여 관리한다.</p><p class="pi">나. 특수자재는 출입이 제한되는 실내에 보관한다.</p><p class="pi">다. 피복 입힌 전선류는 수분을 피해 저장·관리한다.</p><p class="pi">라. 관급자재는 별도의 자재관리대장으로 관리한다.</p>`),
+   B(`<div class="h3">2.3.3 시공관리</div><p class="pi">가. 시공 : ${law}, 내선규정 등에 의거 성실히 시공하며, 도면과 시방서가 상이한 경우 감독관의 지시에 따른다.</p><p class="pi">나. 기기 및 자재 : KS 표시품을 사용하고, KS 규격이 없는 품목은 공인기관의 형식승인 또는 인증 제품으로 감독관의 승인을 받은 후 사용한다.</p><p class="pi">다. 관공서 수속 : 필요한 법적 절차는 관계 당국의 규정에 따라 완료하며 제반 경비는 도급자가 부담한다.</p><p class="pi">라. 현장대리인 : 법정 자격소지자를 현장대리인으로 상주시켜 항시 감독관의 지시에 따른다.</p><p class="pi">마. 공정관리 : 감독관이 지정한 공정에 이르렀을 때 검사를 받고 합격 승인을 얻은 후 다음 공정을 시공한다.</p><p class="pi">바. 입회 및 검사 : 시공 후 점검이 어려운 장소는 감독원 입회하에 시공하고 사진을 촬영하여 사진첩을 제출한다.</p><p class="pi">사. 현장관리 : 도난 및 청결에 유의하고, 시공자의 과실로 인한 시설물 파손은 시공자 부담으로 복구한다.</p>`),
+   ...items.map((it,i)=>B(`${i===0?'<div class="h3">2.3.4 주요공정별 품질관리</div>':''}<p class="pi" style="margin-top:6px"><b>${esc(it[0])}</b></p><table class="fm small" style="font-size:12.5px"><colgroup><col style="width:14%"><col><col style="width:16%"></colgroup><tr><th>단계별</th><th>시 험 항 목</th><th>비 고</th></tr><tr><td class="c">1단계</td><td>${it[1].map(x=>'• '+esc(x)).join('<br>')}</td><td class="c">자재검사</td></tr><tr><td class="c">2단계</td><td>${it[2].map(x=>'• '+esc(x)).join('<br>')}</td><td class="c">품질검사</td></tr></table>`)),
+   B(`<div class="h2" style="margin-top:12px">2. 4 품질기록 및 관리</div><p class="pp">본 절은 "${esc(P.name)}"에서 발생하는 품질기록의 식별, 수집, 색인, 파일링, 보관, 유지 및 처분 절차를 규정한다.</p><div class="h3">2.4.1 품질기록</div><p class="pi">현장에서 관리할 품질기록 : ① 자재청구서 ② 공정·장비·인원 기록 ③ 검사·시험결과 기록 ④ 계측기 교정검사 기록 ⑤ 부적합품 처리결과 ⑥ 시정조치 기록 ⑦ 자격부여 기록 ⑧ 교육·훈련 기록 ⑨ 사후서비스 기록 ⑩ 작업지시서 ⑪ 작업일지 등</p>`),
+   B(`<div class="h3">2.4.2 책임과 권한</div><p class="pi">가. 현장대리인은 공무담당을 지정하여 품질기록을 관리토록 한다.</p><p class="pi">나. 공무담당은 품질기록을 관리할 책임이 있다.</p><div class="h3">2.4.3 품질기록 관리</div><p class="pi">가. 품질기록은 선명하고 식별·검색이 가능하도록 색인 및 파일링하며, 작성·검토·승인자의 서명 날인이 있어야 한다.</p><p class="pi">나. 기록은 최초 작성부서가 검토·수정하며 백색 수정액으로 변경할 수 없다.</p><p class="pi">다. 품질기록은 열화·손상·분실을 방지할 수 있는 장소에 보관하고, 허가 없이 반출할 수 없다.</p><div class="h3">2.4.4 품질기록의 처분</div><p class="pi">준공 시 품질기록 목록을 작성하여 해당 서류를 발주처에 인계하고, 자체 보존이 필요한 기록은 본사로 송부하여 필요한 기간 동안 보관한다.</p>`)];}
+
+/* ---------- 직접시공계획서 ---------- */
+function D_direct(sk){const s=P.scopes[sk];const d=s.direct;const k=directCalc(d);const lab=scopeLabel(sk);const ck=b=>b?'☑':'□';const m=d.method||'단독';
+  const row=(l,v)=>`<tr style="height:22px"><td>${l}</td><td class="r">${v===''||v===null?'':won(v)}</td><td></td><td></td></tr>`;
+  return [{page:`<div class="std" style="font-size:13px">
+<div class="formno"><span>[별지 제22호의6서식]</span><span>(앞쪽)</span></div>
+<h1 class="dt sm" style="font-size:22px;margin:4px 0 12px">건설공사의 직접시공계획서${lab?` (${lab})`:''}</h1>
+<table class="fm small dense" style="font-size:12px;line-height:1.3"><colgroup><col style="width:17%"><col style="width:33%"><col style="width:17%"><col style="width:33%"></colgroup>
+<tr><th>공 사 명</th><td colspan="3">${esc(P.name)}</td></tr>
+<tr><th>① 공 종</th><td>공종 : ${esc(d.kind)}&nbsp;&nbsp;&nbsp;세부공종 : ${esc(d.sub)}</td><th>현장소재지</th><td>${esc(P.site)}</td></tr>
+<tr><th rowspan="2">발 주 자</th><td>상호(기관명) : ${esc(P.owner)}</td><th>구 분</th><td>${ck(P.ownerType!=='민간')} 공공기관&nbsp;&nbsp;${ck(P.ownerType==='민간')} 민간</td></tr>
+<tr><td colspan="3">주소 : ${esc(P.ownerAddr)}</td></tr>
+<tr><th rowspan="2">수 급 인</th><td>상호 : ${esc(C.name)}</td><th>대 표 자</th><td>${spaced(C.ceo)}</td></tr>
+<tr><td colspan="3">영업소 소재지 : ${esc(C.addr)}</td></tr>
+<tr><th colspan="4">공 사 개 요</th></tr>
+<tr><th>도급방법</th><td colspan="3">${ck(m==='단독')} 단독도급&nbsp;&nbsp;${ck(m!=='단독')} 공동도급 (${ck(m==='공동이행')}공동이행방식 ${ck(m==='분담이행')}분담이행방식 ${ck(m==='주계약자')}주계약자관리방식)</td></tr>
+<tr><th>계약성질</th><td colspan="3">${ck(P.longTerm)} 장기계속공사&nbsp;&nbsp;&nbsp;${ck(!P.longTerm)} 기타공사</td></tr>
+<tr><th>② 계 약 일</th><td>${fDot(P.contractDate)}</td><th>③ 착 공 일</th><td>${fDot(P.startDate)}</td></tr>
+<tr><th>④ 준공예정일</th><td>${fDot(s.end)}</td><th>⑤ 도급금액</th><td>일금 ${numKo(s.amount)}원정<br>(₩${won(s.amount)})</td></tr>
+<tr><th colspan="4">직 접 시 공 계 획</th></tr>
+<tr><th colspan="2">직접시공 공종</th><th colspan="2">하도급(예정) 공종</th></tr>
+<tr><th>⑥ 세부공종</th><th>금 액</th><th>⑥ 세부공종</th><th>금 액</th></tr>
+${row('1. 직접공사비',d.direct)}${row('2. 간접노무비',d.labor)}${row('3. 보험료',d.insurance)}${row('4. 안전관리비',d.safety)}
+<tr style="height:22px"><th>소 계</th><td class="r"><b>${won(k.subtotal)}</b></td><th>소 계</th><td></td></tr>
+${row('⑦ 경비(공과잡비)',d.expense)}${row('⑧ 일반관리비',d.overhead)}${row('⑨ 이윤',d.profit)}${row('⑩ 폐기물처리비',d.waste)}${num(d.adjust)?row('단수조정',d.adjust):''}
+<tr style="height:22px"><th>⑪ 직접시공 금액 합계</th><td class="r"><b>${won(k.total)}</b></td><th>⑪ 하도급(예정) 합계</th><td></td></tr>
+<tr style="height:22px"><th>⑫ 부가가치세</th><td class="r">${won(k.vat)}</td><th>⑫ 부가가치세</th><td></td></tr>
+<tr style="height:22px"><th>⑬ 도급금액</th><td class="r"><b>${won(k.grand)}</b></td><td colspan="2"></td></tr></table>
+<p style="margin:12px 0 0;text-indent:1em">「건설산업기본법」 제28조의2의 규정에 의하여 건설공사의 직접시공계획을 통보합니다.</p>
+<div class="sp"></div><div style="text-align:right;margin-right:20px">${fKo(subDate())}</div>
+<div style="text-align:right;margin-right:20px;margin-top:8px;font-size:14.5px">수 급 인&nbsp;&nbsp;&nbsp;${esc(C.name)}&nbsp;&nbsp;&nbsp;${spaced(C.ceo)}&nbsp;&nbsp;${sealHtml()}</div>
+<div class="sp"></div>${toLine()}<div style="font-size:11.5px;margin-top:10px;border-top:1px solid #333;padding-top:6px">구비서류 1. 직접 시공 및 하도급할 공사량·공사단가 및 공사금액이 명시된 공사내역서&nbsp;&nbsp;2. 예정공정표</div></div>`}];}
+
+/* ---------- 근로자 참여현황 ---------- */
+function D_workers(){const A=P.scopes.all;const list=[...P.workers];while(list.length<12)list.push({});return [{page:`<div class="std"><h1 class="dt md">공 사 근 로 자 참 여 현 황</h1><div style="height:24px"></div>
+<table class="kv" style="font-size:15px"><tr><th style="width:96px">공 사 명</th><td class="colon">:</td><td>${esc(P.name)}</td></tr><tr><th>공사금액</th><td class="colon">:</td><td>${amtKo(A.amount)}</td></tr><tr><th>계 약 일</th><td class="colon">:</td><td>${fKo(P.contractDate)}</td></tr><tr><th>착 공 일</th><td class="colon">:</td><td>${fKo(P.startDate)}</td></tr><tr><th>준공예정일</th><td class="colon">:</td><td>${fKo(A.end)}</td></tr></table>
+<div style="margin:18px 0 8px;font-weight:700">□ 직접시공 참여 근로자</div>
+<table class="fm"><colgroup><col style="width:20%"><col style="width:22%"><col style="width:20%"><col style="width:22%"><col style="width:16%"></colgroup><tr><th>성 명</th><th>생년월일</th><th>직 책</th><th>서명(또는 인)</th><th>비 고</th></tr>
+${list.map(w=>`<tr style="height:34px"><td class="c">${esc(w.name)}</td><td class="c">${esc(w.birth)}</td><td class="c">${esc(w.role)}</td><td></td><td></td></tr>`).join('')}</table>
+<div class="sp"></div>${sigBlock()}<div style="height:20px"></div></div>`}];}
+
+/* ---------- 사용인감계 ---------- */
+function D_sealUse(){return [{page:`<div class="std"><div style="height:30px"></div><h1 class="dt">사 용 인 감 계</h1>
+<div class="sealpair"><div><div class="hd">법인인감</div><div class="bx">${C.sealCorp?`<img src="${C.sealCorp}" alt="">`:''}</div></div><div><div class="hd">사용인감</div><div class="bx">${C.sealUse?`<img src="${C.sealUse}" alt="">`:''}</div></div></div>
+<div style="height:40px"></div><p class="stmt l">위의 사용인감을 "${esc(P.name)}"의 계약 및 이에 수반되는 모든 행위에 사용하기 위하여 인감증명(법인인감)서를 첨부하여 제출합니다.</p>
+<p style="margin-top:20px">붙임 : 인감증명서 1부.&nbsp;&nbsp;끝.</p>
+<div class="sp"></div><div class="date-c">${fKo(subDate())}</div><div class="sp"></div>
+<table class="sig"><tr><th>회 사 명</th><td>: ${esc(C.name)}</td></tr><tr><th>주 소</th><td>: ${esc(C.addr)}</td></tr><tr><th>대 표</th><td>: ${spaced(C.ceo,'&nbsp;&nbsp;&nbsp;')}&nbsp;&nbsp;<span class="in">(인)${C.sealCorp?`<img class="seal-img" src="${C.sealCorp}" alt="">`:''}</span></td></tr></table>
+<div class="sp"></div>${toLine(P.sealTo||P.owner)}<div style="height:20px"></div></div>`}];}
+
+/* ---------- 착수계 ---------- */
+function D_commence(){const A=P.scopes.all;return [{page:`<div class="std"><div style="height:40px"></div><h1 class="dt">착 수 계</h1><div style="height:60px"></div>
+<table class="kv big"><tr><th>건 명</th><td class="colon">:</td><td>${esc(P.name)}</td></tr><tr><th>계 약 금 액</th><td class="colon">:</td><td>${amtKo(A.amount)}</td></tr><tr><th>계약년월일</th><td class="colon">:</td><td>${fKo(P.contractDate)}</td></tr><tr><th>납 품 기 한</th><td class="colon">:</td><td>${fKo(A.end)}</td></tr></table>
+<div class="sp"></div><p class="stmt">상기와 같이 착수계를 제출합니다.</p><div class="sp"></div><div class="date-c">${fKo(subDate())}</div><div class="sp"></div>${sigBlock()}<div class="sp"></div>${toLine()}<div style="height:20px"></div></div>`}];}
+
+const RENDER={letter:D_letter,cover:D_cover,start:D_start,sched:D_sched,agent:D_agent,employ:D_employ,
+  license:()=>D_attach('license','자격증 사본'),career:()=>D_attach('career','경력확인서'),sealCert:()=>D_attach('sealCert','인감증명서'),
+  safetyMgr:D_safetyMgr,safetyPlan:D_safetyPlan,gm:D_gm,disaster:D_disaster,safetyCost:D_safetyCost,safetyDetail:D_safetyDetail,quality:D_quality,direct:D_direct,workers:D_workers,sealUse:D_sealUse,commence:D_commence};
+
+/* 서류 → (서류, 차수) 단위 목록 */
+function docUnits(onlyOn){const out=[];DOCS.forEach(d=>{if(onlyOn&&!docOn(d))return;if(d.scoped)scopeKeys().forEach(k=>out.push({doc:d,sk:k,id:d.key+(P.longTerm?':'+k:''),label:d.title+(P.longTerm?` (${scopeLabel(k)})`:'')}));else out.push({doc:d,sk:null,id:d.key,label:d.title});});return out;}
+
+/* ================= 페이지 나누기 ================= */
+function paginate(items,host){const pages=[];let body=null,flowCount=0;
+  const newPage=(land)=>{const p=document.createElement('div');p.className='page'+(land?' land':'');const b=document.createElement('div');b.className='pbody';p.appendChild(b);host.appendChild(p);pages.push(p);return b;};
+  for(const it of items){
+    if(it.page!=null&&!it.merge){const b=newPage(it.land);b.innerHTML=it.page;if(it.empty)b.parentNode.dataset.empty='1';body=null;continue;}
+    if(it.merge){body=newPage(false);const t=document.createElement('div');t.className='blk';t.innerHTML=it.page;body.appendChild(t);flowCount++;continue;}
+    if(!body||it.newPage){body=newPage(false);flowCount++;}
+    const t=document.createElement('div');t.className='blk';t.innerHTML=it.block;body.appendChild(t);
+    if(body.scrollHeight>body.clientHeight+1&&body.children.length>1){body.removeChild(t);body=newPage(false);body.appendChild(t);}
+  }
+  return pages;}
+function justifyLabels(root){root.querySelectorAll('.kv th, .sig th').forEach(th=>{if(th.children.length)return;const t=th.textContent.replace(/\s+/g,'');if(t.length>1)th.textContent=[...t].join(' ');});}
+function renderUnit(u,host){const items=u.doc.scoped?RENDER[u.doc.key](u.sk):RENDER[u.doc.key]();const pages=paginate(items,host);pages.forEach(justifyLabels);
+  const flowDoc=['safetyPlan','quality'].includes(u.doc.key);if(flowDoc&&pages.length>2){pages.slice(2).forEach((p,i)=>{const n=document.createElement('div');n.className='pno';n.textContent=`- ${i+1} -`;p.appendChild(n);});}
+  return pages;}
+
+/* ================= 미리보기 ================= */
+let fontsReady=false;
+async function ensureFonts(){if(fontsReady)return;try{await Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,2500))]);}catch(e){}fontsReady=true;}
+function scheduleRender(){clearTimeout(renderTimer);renderTimer=setTimeout(renderPreview,250);}
+async function renderPreview(){await ensureFonts();const units=docUnits(false);if(!units.find(u=>u.id===curDoc))curDoc=units[0].id;
+  const sel=$('#docSel');sel.innerHTML=units.map(u=>`<option value="${u.id}" ${u.id===curDoc?'selected':''}>${docOn(u.doc)?'':'(제외) '}${esc(u.label)}</option>`).join('');
+  const u=units.find(x=>x.id===curDoc);const host=$('#measure');host.innerHTML='';const pages=renderUnit(u,host);
+  const wrap=$('#sheets');const avail=Math.max(wrap.clientWidth-32,200);wrap.innerHTML='';
+  pages.forEach((p,i)=>{const land=p.classList.contains('land');const W=land?1123:794,H=land?794:1123;const s=Math.min(1,avail/W);
+    const sh=document.createElement('div');sh.className='sheet';sh.style.width=W*s+'px';sh.style.height=H*s+'px';p.style.transform=`scale(${s})`;sh.appendChild(p);
+    if(pages.length>1){const cap=document.createElement('div');cap.className='sheet-cap';cap.textContent=`${i+1} / ${pages.length}`;wrap.appendChild(cap);}wrap.appendChild(sh);});
+  if(focus47){focus47=false;const hs=[...wrap.querySelectorAll('.h3')].find(x=>x.textContent.startsWith('4. 7'));const sh=hs&&hs.closest('.sheet');if(sh)wrap.scrollTop=sh.offsetTop-wrap.offsetTop-10;}
+  if(focusOrg){focusOrg=false;const o=wrap.querySelector('.org');if(o){const sh=o.closest('.sheet');if(sh)wrap.scrollTop=sh.offsetTop-wrap.offsetTop-10;}}
+  $('#pvCount').textContent=`${pages.length}쪽${docOn(u.doc)?'':' · 제출 제외됨'}`;}
+$('#docSel').addEventListener('change',e=>{curDoc=e.target.value;renderPreview();});
+$('#pvPrev').onclick=()=>{const u=docUnits(false);const i=u.findIndex(x=>x.id===curDoc);curDoc=u[(i-1+u.length)%u.length].id;renderPreview();};
+$('#pvNext').onclick=()=>{const u=docUnits(false);const i=u.findIndex(x=>x.id===curDoc);curDoc=u[(i+1)%u.length].id;renderPreview();};
+let rzT;window.addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(renderPreview,200);});
+
+/* ================= 입력 폼 ================= */
+const TABS=[['basic','기본정보'],['people','인원'],['sched','공정표'],['safety','안전관리비'],['direct','직접시공'],['plan','안전·품질계획'],['attach','첨부·인감'],['docs','제출서류']];
+const TAB_DOC={basic:'start',people:'agent',sched:'sched',safety:'safetyCost',direct:'direct',plan:'safetyPlan',attach:'sealUse'};
+function rootOf(src){return src==='c'?C:src==='s'?P.scopes[formScope]:P;}
+function getPath(o,path){return path.split('.').reduce((a,k)=>a==null?a:a[k],o);}
+function setPath(o,path,v){const ks=path.split('.');let a=o;for(let i=0;i<ks.length-1;i++){if(a[ks[i]]==null)a[ks[i]]={};a=a[ks[i]];}a[ks[ks.length-1]]=v;}
+const moneyFmt=v=>v===''||v==null?'':won(v);
+function F(label,path,o={}){const src=o.src||'p';const v=getPath(rootOf(src),path);const id='f-'+src+'-'+path.replace(/\./g,'-');const cls=o.full?'fld full':'fld';
+  if(o.type==='select')return `<label class="${cls}"><span>${label}</span><select id="${id}" data-src="${src}" data-path="${path}" ${o.rr?'data-rr="1"':''}>${o.options.map(op=>{const [val,t]=Array.isArray(op)?op:[op,op];return `<option value="${esc(val)}" ${String(v)===String(val)?'selected':''}>${esc(t)}</option>`;}).join('')}</select>${o.hint?`<em>${o.hint}</em>`:''}</label>`;
+  if(o.type==='check')return `<label class="chk ${o.full?'full':''}" style="${o.full?'grid-column:1/-1':''}"><input type="checkbox" id="${id}" data-src="${src}" data-path="${path}" ${v?'checked':''} ${o.rr?'data-rr="1"':''}>${label}</label>`;
+  if(o.type==='textarea')return `<label class="${cls}"><span>${label}</span><textarea id="${id}" rows="${o.rows||3}" data-src="${src}" data-path="${path}" placeholder="${esc(o.ph||'')}">${esc(v)}</textarea></label>`;
+  const money=o.type==='money';return `<label class="${cls}"><span>${label}</span><input id="${id}" data-src="${src}" data-path="${path}" ${money?'data-money="1" inputmode="numeric"':''} type="${o.type&&!money?o.type:'text'}" value="${esc(money?moneyFmt(v):v??'')}" placeholder="${esc(o.ph||'')}" ${o.max?`maxlength="${o.max}"`:''} ${o.rr?'data-rr="1"':''}>${o.hint?`<em>${o.hint}</em>`:''}</label>`;}
+const sec=(t,inner,extra='')=>`<section class="sec"><h3>${t}${extra}</h3>${inner}</section>`;
+const grid=inner=>`<div class="grid">${inner}</div>`;
+function scopeSeg(){if(!P.longTerm)return '';return `<div class="seg" role="group" aria-label="차수 선택"><button data-act="scope" data-v="all" aria-pressed="${formScope==='all'}">전체</button><button data-act="scope" data-v="first" aria-pressed="${formScope==='first'}">1차</button></div>`;}
+
+function renderTabs(){$('#tabs').innerHTML=TABS.map(([k,t])=>`<button class="tab" role="tab" aria-selected="${k===tab}" data-tab="${k}">${t}</button>`).join('');}
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(!b)return;tab=b.dataset.tab;renderTabs();renderForm();$('#form').scrollTop=0;if(TAB_DOC[tab]){const u=docUnits(false).find(x=>x.doc.key===TAB_DOC[tab]&&(!x.sk||x.sk===formScope))||docUnits(false).find(x=>x.doc.key===TAB_DOC[tab]);if(u){curDoc=u.id;scheduleRender();}}});
+
+function renderForm(){if(!P.longTerm)formScope='all';const f=$('#form');let h='';
+  if(P._example)h+=`<p class="note" style="margin-bottom:14px"><span class="example-flag">예시</span> 예시 데이터입니다. 값을 고치면 내 프로젝트로 저장됩니다. 새 공사는 상단 「새 프로젝트」로 시작하세요.</p>`;
+  if(tab==='basic'){
+    h+=sec('회사 정보 <span class="note" style="font-weight:400">모든 프로젝트 공통</span>',grid(F('회사명','name',{src:'c',ph:'(주)○○전력'})+F('대표자','ceo',{src:'c'})+F('우편번호','zip',{src:'c'})+F('대표 생년월일','ceoBirth',{src:'c',ph:'670517 또는 1967-05-17',hint:'재해방지책임자 선임계에 사용'})+F('주소','addr',{src:'c',full:true})+F('전화','tel',{src:'c'})+F('팩스','fax',{src:'c'})));
+    h+=sec('공사 정보',grid(F('공사명','name',{full:true,ph:'○○ 신축공사 중 전기공사'})+F('업종','trade',{type:'select',options:['전기','통신','소방','기타'],rr:true,hint:'품질관리계획서 기술기준 문구가 바뀝니다'})+F('계약번호','contractNo')
+      +F('수신 (발주기관 계약관)','owner',{ph:'○○시장 / ○○분임계약관',hint:'각 서류의 「귀하」 앞에 들어갑니다'})+F('발주기관 경칭','honor',{type:'select',options:['귀청','귀 기관','귀 부대','귀사','귀 학교']})
+      +F('경유','via',{ph:'○○감리단'})+F('참조','ref')+F('감독관 성명','inspector')+F('발주자 구분','ownerType',{type:'select',options:[['공공','공공기관'],['민간','민간']]})
+      +F('공사현장 주소','site',{full:true})+F('발주자 주소','ownerAddr',{full:true,hint:'직접시공계획서에 사용'})));
+    h+=sec('계약 · 기간',grid(F('장기계속공사 (전체 / 1차 구분)','longTerm',{type:'check',full:true,rr:true})
+      +F('계약일','contractDate',{type:'date'})+F('착공일','startDate',{type:'date'})
+      +F(P.longTerm?'전체 계약금액':'계약금액','scopes.all.amount',{type:'money'})+F(P.longTerm?'전체 준공예정일':'준공예정일','scopes.all.end',{type:'date'})
+      +(P.longTerm?F('1차 계약금액','scopes.first.amount',{type:'money'})+F('1차 준공예정일','scopes.first.end',{type:'date'}):'')
+      +`<div class="calc fld full" id="calcPeriod"></div>`));
+    h+=sec('제출 공문',grid(F('문서번호','docNo',{ph:(C.docPrefix||'')+new Date().getFullYear()+'-01호'})+F('시행(제출)일자','submitDate',{type:'date',hint:'비우면 착공일'})+F('착공계 제출 부수','copies',{type:'number'})));
+  }
+  if(tab==='people'){const a='agent.';
+    h+=sec('현장대리인',grid(F('성명','agent.name')+F('휴대전화','agent.phone')+F('주소','agent.addr',{full:true})+F('자격종목','agent.licType',{ph:'전기기사'})+F('자격등급','agent.licGrade',{ph:'고급 / 통신초급'})+F('자격(경력수첩) 번호','agent.licNo',{full:true})
+      +F('주민번호 앞 6자리','agent.rrn6',{max:6,ph:'840531'})+F('주민번호 뒤 첫자리','agent.rrn1',{max:1,ph:'1',hint:'나머지는 xxxxxx로 표기됩니다'})
+      +F('입사일','agent.joinDate',{type:'date'})+F('직위','agent.position')+F('근무부서','agent.dept')+F('재직증명 발급번호','agent.certNo')));
+    h+=sec('현장대리인 자격증 · 경력확인서',uploader('license','자격수첩·경력수첩 사진 또는 스캔본 (앞뒷면이면 「2장을 한 쪽에」)')+uploader('career','경력확인서가 2장이면 모두 올리세요.'));
+    h+=sec('안전관리자',grid(F('현장대리인이 겸임','safetyMgr.same',{type:'check',full:true,rr:true})+(P.safetyMgr.same?'':F('성명','safetyMgr.name')+F('기술자 등급','safetyMgr.grade')+F('자격(경력)수첩 번호','safetyMgr.licNo')+F('연락처','safetyMgr.phone'))));
+    h+=sec('산업안전보건 총괄책임자',grid(F('현장대리인이 겸임','gm.same',{type:'check',full:true,rr:true})+(P.gm.same?F('주소 (서류 표기용)','gm.addr',{full:true,hint:'비우면 현장대리인 주소'}):F('성명','gm.name')+F('생년월일','gm.birth')+F('주소','gm.addr',{full:true}))));
+    h+=sec('재해방지책임자',grid(F('대표이사가 겸임','disaster.sameCeo',{type:'check',full:true,rr:true})+(P.disaster.sameCeo?'':F('성명','disaster.name')+F('생년월일','disaster.birth'))));
+    h+=sec('직접시공 참여 근로자',`<div class="tblwrap"><table class="et"><thead><tr><th>성명</th><th>생년월일</th><th>직책</th><th></th></tr></thead><tbody>${P.workers.map((w,i)=>`<tr><td><input data-path="workers.${i}.name" value="${esc(w.name)}"></td><td><input data-path="workers.${i}.birth" value="${esc(w.birth)}" placeholder="670517"></td><td><input data-path="workers.${i}.role" value="${esc(w.role)}"></td><td><button class="x" data-act="del" data-arr="workers" data-i="${i}" aria-label="삭제">✕</button></td></tr>`).join('')}</tbody></table></div><div><button class="btn sm" data-act="add" data-arr="workers">+ 근로자 추가</button></div>`);
+  }
+  if(tab==='sched'){const s=P.scopes[formScope];const rows=schedRows(formScope);const fx=s.sched.fixed;
+    h+=sec('예정공정표 '+(P.longTerm?scopeLabel(formScope):''),`<p class="note">공종별 <b>내역금액</b>을 넣으면 보할(%)이 자동 계산됩니다. 일정을 비워두면 공사기간에 맞춰 자동 배치되고, 날짜를 입력하면 그대로 그려집니다.</p>`,scopeSeg());
+    h+=`<div class="tblwrap"><table class="et"><thead><tr><th>공종</th><th>내역금액</th><th>보할</th><th>시작</th><th>종료</th><th></th></tr></thead><tbody>
+${rows.map(r=>r.fixed?`<tr><td><b>${esc(r.name)}</b></td><td><input data-src="s" data-path="sched.fixed.${r.key}.w" value="${esc(fx[r.key].w)}" style="text-align:right" aria-label="고정 보할"></td><td class="num">%</td><td><input type="date" data-src="s" data-path="sched.fixed.${r.key}.s" value="${esc(fx[r.key].s)}"></td><td><input type="date" data-src="s" data-path="sched.fixed.${r.key}.e" value="${esc(fx[r.key].e)}"></td><td></td></tr>`
+ :`<tr><td><input data-src="s" data-path="sched.rows.${r.idx}.name" value="${esc(s.sched.rows[r.idx].name)}"></td><td><input data-src="s" data-money="1" inputmode="numeric" data-path="sched.rows.${r.idx}.amount" value="${moneyFmt(s.sched.rows[r.idx].amount)}"></td><td class="num" data-calc="w${r.idx}">${fmtPct(r.w)}</td><td><input type="date" data-src="s" data-path="sched.rows.${r.idx}.s" value="${esc(s.sched.rows[r.idx].s)}"></td><td><input type="date" data-src="s" data-path="sched.rows.${r.idx}.e" value="${esc(s.sched.rows[r.idx].e)}"></td><td><button class="x" data-act="del" data-src="s" data-arr="sched.rows" data-i="${r.idx}" aria-label="삭제">✕</button></td></tr>`).join('')}
+</tbody></table></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 18px"><button class="btn sm" data-act="add" data-src="s" data-arr="sched.rows">+ 공종 추가</button><button class="btn sm" data-act="fillSched">빈 일정 자동 채우기</button><button class="btn sm" data-act="clearSched">일정 모두 비우기</button>${P.longTerm&&formScope==='first'?'<button class="btn sm" data-act="copyAll" data-what="sched">전체 공정표 공종 복사</button>':''}</div>
+<div class="calc" id="calcSched"></div>`;
+    h+=`<p class="note" style="margin-top:12px">고정공종(현장답사·자재수급·손질공사·시험운용)의 보할은 직접 입력하고, 나머지 비율을 공종별 금액 비율로 나눕니다. 엑셀 원본과 같은 방식(합계 100%)입니다.</p>`;
+  }
+  if(tab==='safety'){const s=P.scopes[formScope];
+    h+=sec('산업안전보건관리비 '+(P.longTerm?scopeLabel(formScope):''),`<div class="calc" id="calcSafety"></div><p class="note">계상액은 「직접시공」 탭의 안전관리비 금액을 그대로 씁니다. 품목을 입력하면 사용계획서와 세부사용계획이 함께 작성됩니다.</p>`,scopeSeg());
+    SAFETY_CATS.forEach(([k,n])=>{const arr=s.safety[k]||[];h+=`<div class="cat"><span>${esc(n)}</span><span class="note" data-calc="cat${k}">${won(arr.reduce((a,r)=>a+num(r.price)*num(r.qty),0))}원</span></div>
+<div class="tblwrap" style="margin-bottom:6px"><table class="et"><thead><tr><th>일자(기간)</th><th>품명</th><th>단위</th><th>단가</th><th>수량</th><th>금액</th><th></th></tr></thead><tbody>${arr.map((r,i)=>`<tr><td><input data-src="s" data-path="safety.${k}.${i}.period" value="${esc(r.period)}" placeholder="2024.01 ~ 2024.12"></td><td><input data-src="s" data-path="safety.${k}.${i}.name" value="${esc(r.name)}"></td><td><input data-src="s" data-path="safety.${k}.${i}.unit" value="${esc(r.unit)}" style="min-width:44px"></td><td><input data-src="s" data-money="1" inputmode="numeric" data-path="safety.${k}.${i}.price" value="${moneyFmt(r.price)}"></td><td><input data-src="s" data-path="safety.${k}.${i}.qty" value="${esc(r.qty)}" style="min-width:44px;text-align:right"></td><td class="num" data-calc="it${k}${i}">${won(num(r.price)*num(r.qty))}</td><td><button class="x" data-act="del" data-src="s" data-arr="safety.${k}" data-i="${i}" aria-label="삭제">✕</button></td></tr>`).join('')}</tbody></table></div>
+<div style="margin-bottom:14px"><button class="btn sm" data-act="add" data-src="s" data-arr="safety.${k}">+ 품목</button></div>`;});
+    if(P.longTerm&&formScope==='first')h+=`<button class="btn sm" data-act="copyAll" data-what="safety">전체 품목을 1차로 복사</button>`;
+  }
+  if(tab==='direct'){const s=P.scopes[formScope];const sp='direct.';
+    h+=sec('직접시공계획서 '+(P.longTerm?scopeLabel(formScope):''),grid(F('공종','direct.kind',{src:'s',ph:'전기'})+F('세부공종','direct.sub',{src:'s',ph:'기타'})+F('도급방법','direct.method',{src:'s',type:'select',options:[['단독','단독도급'],['공동이행','공동도급 · 공동이행'],['분담이행','공동도급 · 분담이행'],['주계약자','공동도급 · 주계약자관리']]})),scopeSeg());
+    h+=sec('공사원가 (내역서 원가계산서 기준)',grid(F('1. 직접공사비','direct.direct',{src:'s',type:'money'})+F('2. 간접노무비','direct.labor',{src:'s',type:'money'})+F('3. 보험료','direct.insurance',{src:'s',type:'money'})+F('4. 안전관리비','direct.safety',{src:'s',type:'money',hint:'산업안전보건관리비 계상액으로도 사용'})
+      +F('⑦ 경비(공과잡비)','direct.expense',{src:'s',type:'money'})+F('⑧ 일반관리비','direct.overhead',{src:'s',type:'money'})+F('⑨ 이윤','direct.profit',{src:'s',type:'money'})+F('⑩ 폐기물처리비','direct.waste',{src:'s',type:'money'})
+      +F('단수조정 (±)','direct.adjust',{src:'s',ph:'-7820',hint:'계약금액에 맞추기 위한 조정액'})+F('부가가치세 (직접입력)','direct.vat',{src:'s',type:'money',hint:'비우면 합계의 10% 자동'})+`<div class="calc fld full" id="calcDirect"></div>`));
+  }
+  if(tab==='plan'){
+    h+=sec('공사개요 (안전·품질관리계획서 공통)',grid(F('공사위치 (개요 표기)','siteDesc',{full:true,ph:'○○부대 내 / 공사현장 주소와 같으면 비워두세요'})));
+    h+=sec('시공수량',`<div class="tblwrap"><table class="et"><thead><tr><th>공종</th><th>수량</th><th></th></tr></thead><tbody>${P.works.map((w,i)=>`<tr><td><input data-path="works.${i}.name" value="${esc(w.name)}"></td><td><input data-path="works.${i}.qty" value="${esc(w.qty)}" style="max-width:90px"></td><td><button class="x" data-act="del" data-arr="works" data-i="${i}" aria-label="삭제">✕</button></td></tr>`).join('')}</tbody></table></div><div style="display:flex;gap:8px"><button class="btn sm" data-act="add" data-arr="works">+ 공종 추가</button><button class="btn sm" data-act="worksFromSched">공정표 공종 가져오기</button></div>`);
+    {const o=orgData();const ed=P.org.custom;
+    const sideRow=(k,lab)=>{const sd=o[k];return ed?`<tr><td><input type="checkbox" data-path="org.${k}.on" ${sd.on?'checked':''} aria-label="${lab} 표시"></td><td><input data-path="org.${k}.t" value="${esc(sd.t)}"></td><td><input data-path="org.${k}.n" value="${esc(sd.n)}"></td><td><input data-path="org.${k}.lv" value="${esc(sd.lv)}" inputmode="numeric" style="min-width:40px;width:52px;text-align:center"></td><td class="note">${lab}</td></tr>`:`<tr><td>${sd.on?'✓':''}</td><td>${esc(sd.t)}</td><td>${esc(sd.n)}</td><td class="num" style="text-align:center">${esc(sd.lv)}</td><td class="note">${lab}</td></tr>`;};
+    h+=sec('안전관리조직도',`<p class="note">${ed?'같은 단계 번호를 준 상자는 옆으로 나란히 배치되고, 단계 순서대로 위에서 아래로 연결됩니다. 미리보기에서 바로 확인하세요.':'지금은 「인원」 탭의 담당자로 자동 작성됩니다. 상자를 추가하거나 직책·이름을 바꾸려면 「직접 수정하기」를 누르세요.'}</p>
+<div class="tblwrap"><table class="et"><thead><tr><th style="width:56px">단계</th><th>직책</th><th>성명 / 내용</th><th></th></tr></thead><tbody>${o.boxes.map((b,i)=>ed?`<tr><td><input data-path="org.boxes.${i}.lv" value="${esc(b.lv)}" inputmode="numeric" style="min-width:40px;width:52px;text-align:center" aria-label="단계"></td><td><input data-path="org.boxes.${i}.t" value="${esc(b.t)}"></td><td><input data-path="org.boxes.${i}.n" value="${esc(b.n)}"></td><td style="white-space:nowrap"><button class="x" data-act="orgMove" data-i="${i}" data-d="-1" aria-label="위로">↑</button><button class="x" data-act="orgMove" data-i="${i}" data-d="1" aria-label="아래로">↓</button><button class="x" data-act="del" data-arr="org.boxes" data-i="${i}" aria-label="삭제">✕</button></td></tr>`:`<tr><td class="num" style="text-align:center">${esc(b.lv)}</td><td>${esc(b.t)}</td><td>${esc(b.n)}</td><td></td></tr>`).join('')}</tbody></table></div>
+<div class="cat" style="margin-top:6px"><span>옆 상자 (점선 연결)</span></div>
+<div class="tblwrap"><table class="et"><thead><tr><th style="width:40px">표시</th><th>직책</th><th>성명 / 내용</th><th style="width:60px">연결 단계</th><th>위치</th></tr></thead><tbody>${sideRow('left','왼쪽')}${sideRow('right','오른쪽')}</tbody></table></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">${ed?`<button class="btn sm" data-act="orgAdd">+ 상자 추가</button><button class="btn sm" data-act="orgAddSame">+ 마지막 단계에 나란히 추가</button><button class="btn sm" data-act="orgReset">자동 작성으로 되돌리기</button>`:`<button class="btn sm primary" data-act="orgEdit">직접 수정하기</button>`}</div>${ed?'<p class="note">직접 수정 중에는 「인원」 탭에서 이름을 바꿔도 조직도에 반영되지 않습니다.</p>':''}`);}
+    {const d=plan47Data();const ed=Array.isArray(P.plan47)&&P.plan47.length;
+    h+=sec('4.7 공정별 안전관리계획',`<p class="note">${ed?'직접 수정한 내용입니다.':'업종('+esc(P.trade)+')에 맞춘 기본 내용입니다. 고치면 이 프로젝트에만 저장됩니다.'} 한 줄에 한 항목씩 쓰면 ①②③ 번호가 자동으로 붙습니다.</p>
+${d.map((x,i)=>`<div style="display:grid;gap:6px;border:1px solid var(--line);border-radius:6px;padding:10px"><div style="display:flex;gap:8px;align-items:center"><span class="note" style="min-width:18px">${'가나다라마바사아자차카타파하'[i]||i+1}.</span><input data-path="plan47.${i}.title" value="${esc(x.title)}" aria-label="제목" style="flex:1;height:32px;border:1px solid var(--line);border-radius:6px;background:var(--field);padding:0 8px;min-width:0"><button class="x" data-act="p47Move" data-i="${i}" data-d="-1" aria-label="위로">↑</button><button class="x" data-act="p47Move" data-i="${i}" data-d="1" aria-label="아래로">↓</button><button class="x" data-act="p47Del" data-i="${i}" aria-label="삭제">✕</button></div>
+<textarea data-path="plan47.${i}.body" rows="${Math.min(10,Math.max(3,String(x.body||'').split('\n').length+1))}" aria-label="${esc(x.title)} 항목" style="border:1px solid var(--line);border-radius:6px;background:var(--field);padding:8px;font-size:13px;line-height:1.6;resize:vertical;width:100%">${esc(x.body)}</textarea></div>`).join('')}
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" data-act="p47Add">+ 항목 묶음 추가</button>${ed?`<button class="btn sm" data-act="p47Reset">업종 기본값으로 되돌리기</button>`:''}</div>`);}
+    h+=sec('비상연락망',grid(F('감리단 명칭','emergency.supervisor',{ph:P.via||'○○감리단'})+F('감리단 연락처','emergency.supervisorTel')+F('감독관 연락처','emergency.inspectorTel')+F('인근 의료기관','emergency.hospital')+F('의료기관 전화','emergency.hospitalTel')+F('관할 소방서','emergency.fire')+F('소방서 전화','emergency.fireTel')+F('관할 경찰서','emergency.police')+F('경찰서 전화','emergency.policeTel')));
+    h+=`<p class="note">안전관리계획서의 조직도와 비상연락망 표는 「인원」 탭의 담당자와 위 연락처로 자동 작성됩니다. 품질관리계획서의 공정별 시험항목은 업종(${esc(P.trade)})에 맞춰 바뀝니다.</p>`;
+  }
+  if(tab==='attach'){
+    h+=sec('인감 이미지 <span class="note" style="font-weight:400">회사 공통</span>',`<p class="note">흰 바탕에 찍은 인감을 스캔하거나 촬영해 올리면 서류의 (인) 자리에 겹쳐 찍힙니다. 사용인감이 있으면 사용인감, 없으면 법인인감을 씁니다.</p><div class="thumbs">${sealSlot('sealCorp','법인인감')}${sealSlot('sealUse','사용인감')}</div>`);
+    h+=sec('현장대리인 첨부',uploader('license','자격수첩·경력수첩 사진이나 스캔본. 앞뒷면을 한 쪽에 넣으려면 「2장을 한 쪽에」를 고르세요.')+uploader('career','경력확인서가 2장이면 둘 다 올리세요. 각 쪽에 1장씩 또는 한 쪽에 2장으로 배치할 수 있습니다.'));
+    h+=sec('인감증명서',uploader('sealCert'));
+    h+=`<p class="note">PDF로 받은 서류는 페이지를 이미지(JPG/PNG)로 저장해 올려주세요. 한 장이 A4 한 쪽이 됩니다.</p>`;
+  }
+  if(tab==='docs'){
+    h+=sec('제출 서류 구성',`<div class="doclist">${DOCS.map(d=>{const st=docStatus(d);return `<div class="docrow"><input type="checkbox" data-doc="${d.key}" ${docOn(d)?'checked':''} aria-label="${esc(d.title)} 포함"><span class="t" data-show="${d.key}">${esc(d.title)}${d.scoped&&P.longTerm?' <span class="note">(전체·1차)</span>':''}</span>${st}</div>`;}).join('')}</div>`);
+    h+=sec('검토',`<ul class="issues" id="issues"></ul>`);
+    h+=sec('내보내기',`<div class="export"><button class="btn primary" data-act="pdf">PDF 저장</button><button class="btn" data-act="html">인쇄용 HTML 저장</button></div><p class="note">PDF는 체크한 서류를 순서대로 한 파일로 묶습니다. 인쇄용 HTML은 브라우저에서 열어 Ctrl+P로 인쇄하거나 「PDF로 저장」하면 글자가 선명하게 나옵니다.</p>`);
+    h+=sec('백업',`<div class="export"><button class="btn" data-act="backup">전체 백업 (JSON)</button><button class="btn" data-act="restore">백업 불러오기</button></div><p class="note">회사 정보·모든 프로젝트·첨부 이미지를 한 파일로 저장합니다. 다른 컴퓨터로 옮길 때도 씁니다.</p>`);
+  }
+  f.innerHTML=h;refreshCalcs();}
+const ATT_T={license:'자격증 사본',career:'경력확인서',sealCert:'인감증명서'};
+function uploader(k,hint){const ids=P.attach[k]||[];const per=+P.attachLayout[k]||1;const t=ATT_T[k];
+  return `<div class="cat"><span>${t} <span class="note">${ids.length?ids.length+'장':''}</span></span>${k!=='sealCert'?`<span class="seg" role="group" aria-label="${t} 배치"><button data-act="layout" data-kind="${k}" data-v="1" aria-pressed="${per===1}">1장씩 각 쪽</button><button data-act="layout" data-kind="${k}" data-v="2" aria-pressed="${per===2}">2장을 한 쪽에</button></span>`:''}</div>
+<div class="thumbs" style="margin-bottom:6px">${ids.map((id,i)=>`<div class="thumb">${imgCache[id]?`<img src="${imgCache[id]}" alt="${t} ${i+1}">`:'<span class="note">불러오는 중</span>'}<button class="x" data-act="delImg" data-kind="${k}" data-i="${i}" aria-label="삭제">✕</button><span class="tno">${Math.floor(i/(k==='sealCert'?1:per))+1}쪽</span><span class="mv"><button class="x" data-act="imgMove" data-kind="${k}" data-i="${i}" data-d="-1" aria-label="앞으로" ${i?'':'disabled'}>←</button><button class="x" data-act="imgMove" data-kind="${k}" data-i="${i}" data-d="1" aria-label="뒤로" ${i<ids.length-1?'':'disabled'}>→</button></span></div>`).join('')}<button class="drop" data-act="addImg" data-kind="${k}">+ 사진 올리기<br><small>클릭 또는 끌어다 놓기<br>여러 장 가능</small></button></div>${hint?`<p class="note">${hint}</p>`:''}`;}
+function sealSlot(k,t){const v=C[k];return `<div style="display:grid;gap:4px;justify-items:center"><div class="thumb sealbox">${v?`<img src="${v}" alt="${t}"><button class="x" data-act="delSeal" data-k="${k}" aria-label="삭제">✕</button>`:`<button class="drop sealbox" style="border:0" data-act="addSeal" data-k="${k}">+ ${t}</button>`}</div><span class="note">${t}</span></div>`;}
+function docStatus(d){if(d.attach){const n=(P.attach[d.attach]||[]).length;return n?`<span class="pill ok">${n}장</span>`:`<span class="pill warn">이미지 없음</span>`;}return '';}
+
+/* 계산 표시 갱신 */
+function refreshCalcs(){const A=P.scopes.all,Fs=P.scopes.first;
+  const cp=$('#calcPeriod');if(cp){const d=daysIncl(P.startDate,A.end);cp.innerHTML=`<span>공사기간</span><b>${d?`착공후 ${d}일`:'—'}${P.longTerm&&daysIncl(P.startDate,Fs.end)?` · 1차 ${daysIncl(P.startDate,Fs.end)}일`:''}</b>`;cp.className='calc fld full';}
+  const s=P.scopes[formScope];
+  const cs=$('#calcSched');if(cs){const rows=schedRows(formScope);const tw=rows.reduce((a,r)=>a+r.w,0);cs.innerHTML=`<span>보할 합계 · ${months(formScope).length}개월</span><b>${r2(tw)}%</b>`;cs.className='calc '+(Math.abs(tw-100)<0.01?'good':'bad');rows.forEach(r=>{if(!r.fixed){const el=document.querySelector(`[data-calc="w${r.idx}"]`);if(el)el.textContent=fmtPct(r.w);}});}
+  const sf=$('#calcSafety');if(sf){const c=safetyCalc(s);const diff=c.sum-c.budget;sf.innerHTML=`<span>계상액 ${won(c.budget)} · 사용예정 ${won(c.sum)}</span><b>${diff>=0?'+':''}${won(diff)}원</b>`;sf.className='calc '+(c.budget&&diff<0?'bad':'good');
+    SAFETY_CATS.forEach(([k])=>{const el=document.querySelector(`[data-calc="cat${k}"]`);if(el)el.textContent=won(c.cats[k])+'원';(s.safety[k]||[]).forEach((r,i)=>{const e2=document.querySelector(`[data-calc="it${k}${i}"]`);if(e2)e2.textContent=won(num(r.price)*num(r.qty));});});}
+  const cd=$('#calcDirect');if(cd){const k=directCalc(s.direct);const diff=k.grand-num(s.amount);cd.innerHTML=`<span>소계 ${won(k.subtotal)} · 합계 ${won(k.total)} · 부가세 ${won(k.vat)}<br>도급금액 ${won(k.grand)} / 계약금액 ${won(s.amount)}</span><b>${diff===0?'일치':(diff>0?'+':'')+won(diff)}</b>`;cd.className='calc fld full '+(k.any?(diff===0?'good':'bad'):'');}
+  const is=$('#issues');if(is){const list=validate();is.innerHTML=list.length?list.map(([lv,t])=>`<li><span class="lv ${lv}">${{e:'확인',w:'주의',i:'참고'}[lv]}</span><span>${t}</span></li>`).join(''):'<li><span class="lv i">완료</span><span>눈에 띄는 누락이 없습니다.</span></li>';}}
+
+function validate(){const out=[];const A=P.scopes.all;
+  if(!P.name)out.push(['e','공사명이 비어 있습니다.']);
+  if(!C.name||!C.ceo)out.push(['e','회사명·대표자를 입력하세요 (기본정보).']);
+  if(!P.owner)out.push(['e','수신(발주기관)이 비어 있습니다.']);
+  if(!P.startDate||!A.end)out.push(['e','착공일과 준공예정일을 입력하세요.']);
+  else if(pd(A.end)<pd(P.startDate))out.push(['e','준공예정일이 착공일보다 빠릅니다.']);
+  if(pd(P.startDate)&&pd(P.contractDate)&&pd(P.startDate)<pd(P.contractDate))out.push(['w','착공일이 계약일보다 빠릅니다.']);
+  if(P.longTerm){const F_=P.scopes.first;if(!num(F_.amount)||!F_.end)out.push(['e','1차 계약금액·준공예정일을 입력하세요.']);if(pd(F_.end)&&pd(A.end)&&pd(F_.end)>pd(A.end))out.push(['w','1차 준공예정일이 전체 준공예정일보다 늦습니다.']);}
+  if(!P.agent.name)out.push(['e','현장대리인 성명이 없습니다.']);
+  if(!P.agent.licNo)out.push(['w','현장대리인 자격번호가 없습니다.']);
+  scopeKeys().forEach(k=>{const s=P.scopes[k];const L=P.longTerm?`(${scopeLabel(k)}) `:'';const d=directCalc(s.direct);
+    if(docOn(DOCS.find(x=>x.key==='direct'))){if(!d.any)out.push(['w',`${L}직접시공계획서 원가 금액이 비어 있습니다.`]);else if(d.grand!==num(s.amount))out.push(['e',`${L}직접시공계획서 도급금액 ${won(d.grand)}원이 계약금액 ${won(s.amount)}원과 다릅니다 (차액 ${won(d.grand-num(s.amount))}원). 단수조정으로 맞추세요.`]);}
+    const c=safetyCalc(s);if(c.budget&&c.sum<c.budget)out.push(['w',`${L}안전관리비 사용예정액(${won(c.sum)})이 계상액(${won(c.budget)})보다 ${won(c.budget-c.sum)}원 적습니다.`]);
+    if(!c.budget)out.push(['w',`${L}안전관리비 계상액이 없습니다 (직접시공 탭 4. 안전관리비).`]);
+    if(!s.sched.rows.length)out.push(['w',`${L}공정표 공종이 없습니다.`]);
+    const rows=schedRows(k);rows.forEach(r=>{if(pd(r.e)&&pd(r.s)&&pd(r.e)<pd(r.s))out.push(['e',`${L}공정표 「${esc(r.name)}」 종료일이 시작일보다 빠릅니다.`]);if(pd(r.e)&&pd(s.end)&&pd(r.e)>pd(s.end))out.push(['w',`${L}공정표 「${esc(r.name)}」 종료일이 준공예정일 이후입니다.`]);});});
+  DOCS.filter(d=>d.attach&&docOn(d)&&!(P.attach[d.attach]||[]).length).forEach(d=>out.push(['w',`${d.title} 이미지가 없어 내보내기에서 빠집니다.`]));
+  if(!C.sealCorp&&!C.sealUse)out.push(['i','인감 이미지가 없으면 (인) 자리가 비어 있게 출력됩니다. 출력 후 날인해도 됩니다.']);
+  return out;}
+
+/* 입력 처리 */
+$('#form').addEventListener('input',e=>{const el=e.target;if(el.dataset.doc!==undefined)return;const path=el.dataset.path;if(!path)return;const src=el.dataset.src||'p';
+  let v=el.type==='checkbox'?el.checked:el.value;
+  if(el.dataset.money){const neg=/^\s*-/.test(v);const digits=v.replace(/[^\d]/g,'');v=digits===''?'':(neg?-1:1)*Number(digits);
+    if(e.inputType&&!/delete/.test(e.inputType)){const pos=el.value.length-el.selectionStart;el.value=v===''?'':won(v);const np=Math.max(el.value.length-pos,0);try{el.setSelectionRange(np,np);}catch(_){}}}
+  if(el.type==='number')v=el.value;
+  if(src==='p'&&path.startsWith('plan47.')&&!(Array.isArray(P.plan47)&&P.plan47.length)){P.plan47=plan47Default();}
+  if(src==='p'&&path.startsWith('plan47.'))focus47=true;
+  setPath(rootOf(src),path,v);markDirty(src==='c'?'c':'p');
+  if(el.dataset.rr){if(path==='longTerm'&&!v)formScope='all';renderForm();}
+  else refreshCalcs();
+  if(path==='name'&&src==='p')renderProjSel();
+  if(path.startsWith('org.')){focusOrg=true;curDoc='safetyPlan';}
+  if(path.startsWith('plan47.'))curDoc='safetyPlan';
+  scheduleRender();});
+$('#form').addEventListener('change',e=>{const el=e.target;
+  if(el.dataset.doc){P.docs[el.dataset.doc]=el.checked;markDirty('p');refreshCalcs();scheduleRender();return;}
+  if(el.tagName==='SELECT'&&el.dataset.path){/* input 이벤트에서 처리됨 */}
+  if(el.dataset.money&&el.value){el.value=won(num(el.value)*(/^\s*-/.test(el.value)?-1:1));}});
+$('#form').addEventListener('click',async e=>{const b=e.target.closest('[data-act],[data-show]');if(!b)return;
+  if(b.dataset.show){const u=docUnits(false).find(x=>x.doc.key===b.dataset.show);if(u){curDoc=u.id;renderPreview();if(innerWidth<=900)setView('prev');}return;}
+  const act=b.dataset.act;const src=b.dataset.src||'p';const root=rootOf(src);
+  if(act==='scope'){formScope=b.dataset.v;renderForm();const u=docUnits(false).find(x=>x.doc.key===TAB_DOC[tab]&&x.sk===formScope);if(u){curDoc=u.id;scheduleRender();}return;}
+  if(act==='add'){const arr=getPath(root,b.dataset.arr)||[];const tmpl=b.dataset.arr==='workers'?{name:'',birth:'',role:''}:b.dataset.arr==='works'?{name:'',qty:'1식'}:b.dataset.arr==='sched.rows'?{name:'',amount:'',s:'',e:''}:{period:defaultPeriod(),name:'',unit:'',price:'',qty:''};arr.push(tmpl);setPath(root,b.dataset.arr,arr);markDirty('p');renderForm();scheduleRender();return;}
+  if(act==='del'){const arr=getPath(root,b.dataset.arr)||[];arr.splice(+b.dataset.i,1);markDirty('p');renderForm();scheduleRender();return;}
+  if(act==='fillSched'){const s=P.scopes[formScope];schedRows(formScope).forEach(r=>{if(r.fixed){const f=s.sched.fixed[r.key];f.s=f.s||r.s;f.e=f.e||r.e;}else{const x=s.sched.rows[r.idx];x.s=x.s||r.s;x.e=x.e||r.e;}});markDirty('p');renderForm();scheduleRender();return;}
+  if(act==='clearSched'){const s=P.scopes[formScope];Object.values(s.sched.fixed).forEach(f=>{f.s='';f.e='';});s.sched.rows.forEach(r=>{r.s='';r.e='';});markDirty('p');renderForm();scheduleRender();return;}
+  if(act==='copyAll'){const A=P.scopes.all,Fs=P.scopes.first;if(b.dataset.what==='sched'){Fs.sched.rows=A.sched.rows.map(r=>({name:r.name,amount:r.amount,s:'',e:''}));}else{Fs.safety=clone(A.safety);}markDirty('p');renderForm();scheduleRender();toast('전체 내용을 1차로 복사했습니다');return;}
+  if(act==='p47Add'||act==='p47Del'||act==='p47Move'||act==='p47Reset'){if(act==='p47Reset'){P.plan47=null;}else{if(!(Array.isArray(P.plan47)&&P.plan47.length))P.plan47=plan47Default();const a=P.plan47,i=+b.dataset.i;
+    if(act==='p47Add')a.push({title:'',body:''});if(act==='p47Del')a.splice(i,1);if(act==='p47Move'){const j=i+(+b.dataset.d);if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];}if(!a.length)P.plan47=[{title:'',body:''}];}
+    focus47=true;curDoc='safetyPlan';markDirty('p');renderForm();scheduleRender();return;}
+  if(act==='orgEdit'){const a=orgAuto();P.org={custom:true,boxes:a.boxes,left:a.left,right:a.right};focusOrg=true;markDirty('p');renderForm();scheduleRender();return;}
+  if(act==='orgReset'){P.org.custom=false;focusOrg=true;markDirty('p');renderForm();scheduleRender();return;}
+  if(act==='orgAdd'||act==='orgAddSame'){const bs=P.org.boxes;const maxLv=bs.reduce((a,b)=>Math.max(a,num(b.lv)||1),0);bs.push({lv:act==='orgAdd'?maxLv+1:Math.max(maxLv,1),t:'',n:''});focusOrg=true;markDirty('p');renderForm();scheduleRender();return;}
+  if(act==='orgMove'){const bs=P.org.boxes,i=+b.dataset.i,j=i+(+b.dataset.d);if(j>=0&&j<bs.length){[bs[i],bs[j]]=[bs[j],bs[i]];focusOrg=true;markDirty('p');renderForm();scheduleRender();}return;}
+  if(act==='worksFromSched'){P.works=P.scopes.all.sched.rows.filter(r=>r.name).map(r=>({name:r.name,qty:'1식'}));markDirty('p');renderForm();scheduleRender();return;}
+  if(act==='addImg'){pickImages(b.dataset.kind);return;}
+  if(act==='layout'){P.attachLayout[b.dataset.kind]=+b.dataset.v;markDirty('p');renderForm();curDoc=b.dataset.kind;scheduleRender();return;}
+  if(act==='imgMove'){const arr=P.attach[b.dataset.kind],i=+b.dataset.i,j=i+(+b.dataset.d);if(j>=0&&j<arr.length){[arr[i],arr[j]]=[arr[j],arr[i]];markDirty('p');renderForm();curDoc=b.dataset.kind;scheduleRender();}return;}
+  if(act==='delImg'){const arr=P.attach[b.dataset.kind];const [id]=arr.splice(+b.dataset.i,1);markDirty('p');renderForm();scheduleRender();try{await Store.deleteImg(id);}catch(_){}delete imgCache[id];return;}
+  if(act==='addSeal'){pickSeal(b.dataset.k);return;}
+  if(act==='delSeal'){C[b.dataset.k]='';markDirty('c');renderForm();scheduleRender();return;}
+  if(act==='pdf'){exportPdf();return;}
+  if(act==='html'){exportHtml();return;}
+  if(act==='backup'){exportBackup();return;}
+  if(act==='restore'){$('#fileJson').click();return;}
+});
+function defaultPeriod(){const a=pd(P.startDate),b=pd(P.scopes[formScope].end);return a&&b?`${a.getUTCFullYear()}.${p2(a.getUTCMonth()+1)} ~ ${b.getUTCFullYear()}.${p2(b.getUTCMonth()+1)}`:'';}
+
+/* ================= 이미지 ================= */
+function loadImageFile(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=r.result;};r.onerror=rej;r.readAsDataURL(file);});}
+function compress(im,maxSide,type,limit){let side=maxSide,q=.85,out='';for(let i=0;i<8;i++){const sc=Math.min(1,side/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);const g=c.getContext('2d');if(type==='image/jpeg'){g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);}g.drawImage(im,0,0,c.width,c.height);out=c.toDataURL(type,q);if(out.length<limit)return out;side*=.82;q=Math.max(.55,q-.08);}return out;}
+let pickKind=null,pickMode='img';
+function pickImages(kind){pickKind=kind;pickMode='img';const fi=$('#fileImg');fi.multiple=true;fi.value='';fi.click();}
+function pickSeal(k){pickKind=k;pickMode='seal';const fi=$('#fileImg');fi.multiple=false;fi.value='';fi.click();}
+async function addFiles(files){files=files.filter(f=>{if(/^image\//.test(f.type))return true;toast(f.name+' : 이미지 파일(JPG·PNG)만 올릴 수 있습니다. PDF는 이미지로 저장해 올려주세요.',4000);return false;});if(!files.length)return;
+  for(const f of files){try{const im=await loadImageFile(f);
+    if(pickMode==='seal'){C[pickKind]=sealize(im);markDirty('c');}
+    else{const data=compress(im,2000,'image/jpeg',900000);const id='i'+uid();imgCache[id]=data;await Store.saveImg(id,data);P.attach[pickKind].push(id);markDirty('p');}}
+    catch(err){toast('이미지를 저장하지 못했습니다. 더 작은 이미지로 다시 시도하세요.');}}
+  renderForm();if(pickMode==='img')curDoc=pickKind;scheduleRender();if(pickMode==='img')toast(files.length+'장을 올렸습니다');}
+$('#fileImg').addEventListener('change',e=>addFiles([...e.target.files]));
+$('#form').addEventListener('dragover',e=>{const d=e.target.closest('.drop[data-kind]');if(!d)return;e.preventDefault();d.classList.add('over');});
+$('#form').addEventListener('dragleave',e=>{const d=e.target.closest('.drop[data-kind]');if(d)d.classList.remove('over');});
+$('#form').addEventListener('drop',e=>{const d=e.target.closest('.drop[data-kind]');if(!d)return;e.preventDefault();d.classList.remove('over');pickKind=d.dataset.kind;pickMode='img';addFiles([...(e.dataTransfer.files||[])]);});
+/* 인감: 흰 배경을 투명하게, 붉은 인영만 남김 */
+function sealize(im){const sc=Math.min(1,320/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);const g=c.getContext('2d');g.drawImage(im,0,0,c.width,c.height);
+  try{const d=g.getImageData(0,0,c.width,c.height);const a=d.data;for(let i=0;i<a.length;i+=4){const r=a[i],gg=a[i+1],b=a[i+2];const light=(r+gg+b)/3;if(light>215&&Math.max(r,gg,b)-Math.min(r,gg,b)<40)a[i+3]=0;}g.putImageData(d,0,0);}catch(_){}
+  return c.toDataURL('image/png');}
+async function loadProjectImages(p){const ids=[...(p.attach.license||[]),...(p.attach.career||[]),...(p.attach.sealCert||[])].filter(id=>!imgCache[id]);if(!ids.length)return;
+  await Promise.all(ids.map(async id=>{try{const d=await Store.loadImg(id);if(d)imgCache[id]=d;}catch(_){}}));if(p===P){if(tab==='attach')renderForm();scheduleRender();}}
+
+/* ================= 프로젝트 관리 ================= */
+function renderProjSel(){const s=$('#projSel');const list=[...projects].sort((a,b)=>(b.updated||0)-(a.updated||0));s.innerHTML=list.map(p=>`<option value="${p.id}" ${p.id===P.id?'selected':''}>${p._example?'[예시] ':''}${esc(p.name||'(공사명 없음)')}</option>`).join('');}
+function openProject(p){P=normalize(p);const i=projects.findIndex(x=>x.id===P.id);if(i>=0)projects[i]=P;formScope='all';renderProjSel();renderForm();scheduleRender();loadProjectImages(P);}
+$('#projSel').addEventListener('change',e=>{const p=projects.find(x=>x.id===e.target.value);if(p)openProject(p);});
+$('#btnNew').onclick=()=>{const p=emptyProject();p.name='';p.owner='';p.startDate='';projects=projects.filter(x=>!x._example);projects.push(p);tab='basic';renderTabs();openProject(p);markDirty('p');toast('새 프로젝트를 만들었습니다. 공사명부터 입력하세요.');};
+$('#btnDup').onclick=()=>{const p=clone(P);p.id=uid();delete p._example;p.name=(P.name||'공사')+' (사본)';p.updated=Date.now();p.attach={license:[],career:[],sealCert:[]};projects.push(p);openProject(p);markDirty('p');toast('복제했습니다. 첨부 이미지는 복제되지 않습니다.');};
+function renderDel(){const w=$('#delWrap');if(!delConfirm){w.innerHTML='<button class="btn danger" id="btnDel">삭제</button>';$('#btnDel').onclick=()=>{delConfirm=true;renderDel();};return;}
+  w.innerHTML=`<span class="confirm">「${esc(P.name||'이 프로젝트')}」를 지울까요? <button class="btn sm danger" id="delYes">삭제</button><button class="btn sm" id="delNo">취소</button></span>`;
+  $('#delNo').onclick=()=>{delConfirm=false;renderDel();};
+  $('#delYes').onclick=async()=>{const p=P;delConfirm=false;renderDel();projects=projects.filter(x=>x.id!==p.id);
+    try{if(!p._example){await Store.deleteProject(p.id);for(const id of [...p.attach.license,...p.attach.career,...p.attach.sealCert])await Store.deleteImg(id);}}catch(_){}
+    if(!projects.length)projects=[exampleProject()];openProject(projects[0]);toast('삭제했습니다');};}
+
+/* ================= 내보내기 ================= */
+function loadScript(src){return new Promise((res,rej)=>{if(document.querySelector(`script[src="${src}"]`))return res();const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
+async function saveFile(filename,data,mime){let dl=null;try{dl=window.claude&&window.claude.use?await claude.use('downloads'):null;}catch(_){}
+  if(dl){try{await dl.save({filename,data});return true;}catch(e){if(e&&e.code==='declined')return false;toast('파일을 저장하지 못했습니다: '+(e&&e.message||e&&e.code||''));return false;}}
+  try{const blob=data instanceof Blob?data:new Blob([data],{type:mime});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);return true;}catch(e){toast('이 화면에서는 파일 저장을 지원하지 않습니다.');return false;}}
+const safeName=s=>(s||'착공계').replace(/[\\/:*?"<>|]/g,'').slice(0,60);
+function overlay(text){const o=document.createElement('div');o.className='overlay';o.innerHTML=`<div class="box"><b id="ovT">${esc(text)}</b><div class="bar-out"><div class="bar-in" id="ovB"></div></div><span class="note" id="ovN"></span></div>`;document.body.appendChild(o);return {set(p,n){$('#ovB').style.width=(p*100)+'%';$('#ovN').textContent=n||'';},close(){o.remove();}};}
+async function buildAllPages(host){await ensureFonts();const units=docUnits(true);const pages=[];for(const u of units){const ps=renderUnit(u,host).filter(p=>!p.dataset.empty);pages.push(...ps);}return pages;}
+async function exportPdf(){const ov=overlay('PDF 만드는 중…');try{
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+  const host=document.createElement('div');host.className='export-host';document.body.appendChild(host);
+  const pages=await buildAllPages(host);if(!pages.length){toast('내보낼 서류가 없습니다');return;}
+  const {jsPDF}=window.jspdf;let pdf=null;
+  for(let i=0;i<pages.length;i++){const p=pages[i];const land=p.classList.contains('land');ov.set(i/pages.length,`${i+1} / ${pages.length}쪽`);
+    host.innerHTML='';host.appendChild(p);
+    const canvas=await html2canvas(p,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false,scrollX:0,scrollY:0,windowWidth:1200});
+    const img=canvas.toDataURL('image/jpeg',.9);const w=land?297:210,h=land?210:297;
+    if(!pdf)pdf=new jsPDF({unit:'mm',format:'a4',orientation:land?'l':'p'});else pdf.addPage('a4',land?'l':'p');
+    pdf.addImage(img,'JPEG',0,0,w,h);await new Promise(r=>setTimeout(r,0));}
+  host.remove();ov.set(1,'저장 준비');const buf=pdf.output('arraybuffer');
+  const ok=await saveFile(`${safeName(P.name)}_착공계.pdf`,buf,'application/pdf');if(ok)toast(`PDF ${pages.length}쪽을 저장했습니다`);}
+  catch(e){toast('PDF를 만들지 못했습니다. 인쇄용 HTML 저장을 이용해 주세요.');}
+  finally{ov.close();document.querySelectorAll('.export-host').forEach(x=>x.remove());}}
+async function exportHtml(){const ov=overlay('인쇄용 파일 만드는 중…');try{const host=document.createElement('div');host.className='measure';document.body.appendChild(host);
+  const pages=await buildAllPages(host);const css=[...document.querySelectorAll('style')].map(s=>s.textContent).join('\n');
+  const doc=`<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>${esc(P.name)} 착공계</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Gothic:wght@400;700&display=swap">
+<style>${css}
+html,body{height:auto;overflow:visible;background:#888;margin:0}
+.page{margin:16px auto;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+@page{size:A4 portrait;margin:0}
+@page land{size:A4 landscape;margin:0}
+.page.land{page:land}
+@media print{body{background:#fff}.page{margin:0;box-shadow:none;break-after:page}}
+</style></head><body>${pages.map(p=>p.outerHTML).join('\n')}</body></html>`;
+  host.remove();const ok=await saveFile(`${safeName(P.name)}_착공계_인쇄용.html`,doc,'text/html');if(ok)toast(`${pages.length}쪽 인쇄용 파일을 저장했습니다`);}
+  catch(e){toast('인쇄용 파일을 만들지 못했습니다.');}finally{ov.close();}}
+async function exportBackup(){const ov=overlay('백업 파일 만드는 중…');try{const images={};for(const p of projects.filter(x=>!x._example)){for(const id of [...p.attach.license,...p.attach.career,...p.attach.sealCert]){if(!imgCache[id]){try{imgCache[id]=await Store.loadImg(id);}catch(_){}}if(imgCache[id])images[id]=imgCache[id];}}
+  const data={app:'착공계원스톱',version:1,exported:new Date().toISOString(),company:C,projects:projects.filter(x=>!x._example),images};
+  const d=new Date();await saveFile(`착공계_백업_${d.getFullYear()}${p2(d.getMonth()+1)}${p2(d.getDate())}.json`,JSON.stringify(data),'application/json');}
+  finally{ov.close();}}
+$('#fileJson').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text());if(data.app!=='착공계원스톱')throw new Error('형식');
+  const ov=overlay('백업 불러오는 중…');try{if(data.company){C=Object.assign(emptyCompany(),data.company);delete C._example;await Store.saveCompany(C);}
+    const imgs=data.images||{};const ids=Object.keys(imgs);for(let i=0;i<ids.length;i++){imgCache[ids[i]]=imgs[ids[i]];await Store.saveImg(ids[i],imgs[ids[i]]);ov.set(i/Math.max(ids.length,1));}
+    for(const p of data.projects||[]){const n=normalize(p);delete n._example;const i=projects.findIndex(x=>x.id===n.id);if(i>=0)projects[i]=n;else projects.push(n);await Store.saveProject(n);}
+    projects=projects.filter(x=>!x._example);if(!projects.length)projects=[exampleProject()];openProject(projects[0]);toast(`프로젝트 ${(data.projects||[]).length}개를 불러왔습니다`);}finally{ov.close();}}
+  catch(err){toast('백업 파일을 읽지 못했습니다. 이 프로그램에서 저장한 JSON인지 확인하세요.');}e.target.value='';});
+
+/* ================= 화면 전환 (모바일) ================= */
+function setView(v){$('#main').dataset.view=v;$('#vForm').setAttribute('aria-pressed',v==='form');$('#vPrev').setAttribute('aria-pressed',v==='prev');if(v==='prev')renderPreview();}
+$('#vForm').onclick=()=>setView('form');$('#vPrev').onclick=()=>setView('prev');
+
+/* ================= 시작 ================= */
+function applyLoaded({company,projects:ps}){if(company)C=Object.assign(emptyCompany(),company);const list=(ps||[]).map(normalize);
+  if(list.length){projects=list;const last=[...list].sort((a,b)=>(b.updated||0)-(a.updated||0))[0];openProject(last);}else{renderProjSel();renderForm();scheduleRender();}}
+function showBanner(html){$('#bannerHost').innerHTML=html?`<div class="banner">${html}</div>`:'';}
+(async function boot(){renderTabs();renderDel();
+  try{const me=await fetch('/api/me',{credentials:'same-origin'}).then(r=>r.ok?r.json():null);
+    if(me){const u=me.user;$('#userBox').innerHTML=`<span class="who-name">${esc(u.name||u.email)}</span>${u.role==='admin'?'<a class="btn sm" href="/admin">관리자</a>':''}<a class="btn sm" href="/license">내 라이선스</a><button class="btn sm" id="btnLogout">로그아웃</button>`;
+      $('#btnLogout').onclick=async()=>{await fetch('/api/auth/logout',{method:'POST',headers:{'X-Requested-With':'fetch'}});location.href='/login';};
+      if(me.license&&me.today){const d=Math.round((new Date(me.license.expiresAt+'T00:00:00Z')-new Date(me.today+'T00:00:00Z'))/86400000);if(d>=0&&d<=30)showBanner(`라이선스 사용 기간이 ${d}일 남았습니다 (${esc(me.license.expiresAt)}까지). <a href="/license">연장 신청 →</a>`);}}}catch(_){}
+  setSave('불러오는 중…');
+  try{const remote=await Store.loadAll();
+    if(remote.projects.length||remote.company)applyLoaded(remote);else{renderProjSel();renderForm();scheduleRender();}
+    setSave(remote.projects.length||remote.company?'서버에 저장됨':'예시 데이터 — 수정하면 저장됩니다',!!(remote.projects.length||remote.company));}
+  catch(e){setSave('서버에 연결하지 못했습니다');renderProjSel();renderForm();scheduleRender();}
+})();
+</script>
+
+</body></html>

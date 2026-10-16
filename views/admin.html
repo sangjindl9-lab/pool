@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>관리자 · 착공계 원스톱</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/static/style.css">
+</head><body>
+<header class="top">
+  <div class="brand"><span class="mark">착</span><span id="brand">착공계 원스톱</span> <span class="pill">관리자</span></div>
+  <span class="sp"></span>
+  <a class="btn sm" href="/app">프로그램</a>
+  <button class="btn sm" onclick="logout()">로그아웃</button>
+</header>
+<main class="wrap">
+  <nav class="tabs" id="tabs" role="tablist"></nav>
+  <div id="view"></div>
+</main>
+<script src="/static/common.js"></script>
+<script>
+const TABS=[['dash','대시보드'],['orders','입금 확인'],['licenses','라이선스'],['users','회원'],['settings','설정'],['audit','작업 기록']];
+let tab=(location.hash||'#dash').slice(1);if(!TABS.find(t=>t[0]===tab))tab='dash';
+function renderTabs(){$('#tabs').innerHTML=TABS.map(([k,t])=>`<button class="tab" role="tab" aria-selected="${k===tab}" data-t="${k}">${t}<span id="badge-${k}"></span></button>`).join('');
+  document.querySelectorAll('#tabs .tab').forEach(b=>b.onclick=()=>{tab=b.dataset.t;history.replaceState(null,'','#'+tab);renderTabs();show();});}
+const V=()=>$('#view');
+const stPill=(l,today)=>{if(l.status!=='active')return '<span class="pill bad">정지</span>';const d=dday(l.expires_at,today);if(d<0)return '<span class="pill bad">만료</span>';if(d<=30)return `<span class="pill warn">D-${d}</span>`;return '<span class="pill ok">사용 중</span>';};
+let TODAY='';
+async function badges(){try{const s=await api('/api/admin/summary');TODAY=s.today;$('#badge-orders').innerHTML=s.pendingOrders?` <span class="pill warn">${s.pendingOrders}</span>`:'';return s;}catch(e){if(e.status===403||e.status===401)location.href='/login';throw e;}}
+
+/* 대시보드 */
+async function showDash(){const s=await badges();V().innerHTML=`<section class="card"><div class="grid3">
+<div class="stat"><span>입금 확인 대기</span><b class="big">${s.pendingOrders}건</b></div>
+<div class="stat"><span>사용 중 라이선스</span><b class="big">${s.activeLicenses}개</b></div>
+<div class="stat"><span>30일 안에 만료</span><b class="big">${s.expiringSoon}개</b></div>
+<div class="stat"><span>만료된 라이선스</span><b class="big">${s.expired}개</b></div>
+<div class="stat"><span>가입 회원</span><b class="big">${s.users}명</b></div>
+<div class="stat"><span>이번 달 입금 확인액</span><b class="big">${won(s.monthRevenue)}원</b></div></div></section>
+${s.pendingOrders?`<div class="banner">입금 확인을 기다리는 신청이 ${s.pendingOrders}건 있습니다. <a href="#orders" onclick="tab='orders';renderTabs();show()">입금 확인으로 →</a></div>`:''}`;}
+
+/* 입금 확인 */
+let oFilter='pending';
+async function showOrders(){await badges();const rows=await api('/api/admin/orders'+(oFilter?'?status='+oFilter:''));
+  V().innerHTML=`<section class="card"><div class="row" style="justify-content:space-between"><h2>이용권 신청 · 입금 확인</h2><div class="row">${[['pending','대기'],['confirmed','완료'],['cancelled','취소'],['','전체']].map(([k,t])=>`<button class="btn sm ${oFilter===k?'primary':''}" data-f="${k}">${t}</button>`).join('')}</div></div>
+<p class="note">통장에서 입금자명·금액을 확인한 뒤 「입금 확인」을 누르면 라이선스가 자동 발급됩니다. 이미 라이선스가 있는 회원이면 기간이 연장됩니다.</p>
+${rows.length?`<div class="tbl"><table class="t"><thead><tr><th>신청일</th><th>회원</th><th>이용권</th><th class="num">금액</th><th>입금자명</th><th>세금계산서</th><th>상태</th><th></th></tr></thead><tbody>
+${rows.map(o=>`<tr><td>${esc(o.created_at.slice(0,16))}</td><td><b>${esc(o.user_name)}</b> ${esc(o.user_company)}<br><span class="note">${esc(o.email)} ${esc(o.user_phone)}</span></td><td>${esc(o.plan_name)}</td><td class="num">${won(o.amount)}원</td><td><b>${esc(o.depositor)}</b></td><td>${o.biz_no?esc(o.biz_no)+'<br><span class="note">'+esc(o.tax_email)+'</span>':'<span class="note">-</span>'}${o.memo?'<br><span class="note">요청: '+esc(o.memo)+'</span>':''}</td>
+<td>${o.status==='pending'?'<span class="pill warn">대기</span>':o.status==='confirmed'?`<span class="pill ok">완료</span><br><span class="mono note">${esc(o.license_key||'')}</span>`:'<span class="pill">취소</span>'}</td>
+<td style="white-space:nowrap">${o.status==='pending'?`<button class="btn sm primary" data-ok="${o.id}" data-name="${esc(o.depositor)}" data-amt="${o.amount}">입금 확인</button> <button class="btn sm danger" data-no="${o.id}">취소</button>`:''}</td></tr>`).join('')}</tbody></table></div>`:'<p class="note">해당하는 신청이 없습니다.</p>'}</section>`;
+  V().querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{oFilter=b.dataset.f;showOrders();});
+  V().querySelectorAll('[data-ok]').forEach(b=>b.onclick=async()=>{if(!confirm(`${b.dataset.name} 님의 ${won(b.dataset.amt)}원 입금을 확인하고 라이선스를 발급할까요?`))return;
+    try{const r=await api(`/api/admin/orders/${b.dataset.ok}/confirm`,{method:'POST',body:{}});toast(`${r.action==='extend'?'연장':'발급'} 완료 · ${r.licenseKey} · ${r.expiresAt}까지`,5000);showOrders();}catch(e){toast(e.message);}});
+  V().querySelectorAll('[data-no]').forEach(b=>b.onclick=async()=>{const memo=prompt('취소 사유 (선택)','');if(memo===null)return;try{await api(`/api/admin/orders/${b.dataset.no}/cancel`,{method:'POST',body:{memo}});showOrders();}catch(e){toast(e.message);}});}
+
+/* 라이선스 */
+let lq='',openLic=new Set();
+async function showLicenses(){await badges();const rows=await api('/api/admin/licenses?q='+encodeURIComponent(lq));
+  V().innerHTML=`<section class="card"><h2>라이선스 직접 발급</h2><p class="note">입금 확인 없이 키를 바로 만들 때 씁니다(시범 사용, 현금 결제 등). 회원 이메일을 넣으면 그 회원에게 바로 연결되고, 비우면 키만 만들어 고객이 직접 등록합니다.</p>
+<form id="fNew" class="grid3">
+<label class="fld"><span>고객명</span><input id="nName"></label><label class="fld"><span>회사명</span><input id="nCompany"></label><label class="fld"><span>연락처</span><input id="nPhone"></label>
+<label class="fld"><span>회원 이메일 (선택)</span><input id="nEmail" type="email"></label><label class="fld"><span>사용 기간</span><select id="nMonths"><option value="1">1개월</option><option value="3">3개월</option><option value="6">6개월</option><option value="12" selected>12개월</option><option value="24">24개월</option></select></label><label class="fld"><span>IP 개수</span><input id="nIps" type="number" min="1" max="20" value="3"></label>
+<label class="fld" style="grid-column:1/-1"><span>메모</span><input id="nMemo"></label>
+<div><button class="btn primary">키 발급</button></div></form><div id="newKey"></div></section>
+<section class="card"><div class="row" style="justify-content:space-between"><h2>라이선스 목록 <span class="note">${rows.length}개</span></h2><form id="fQ" class="row"><input id="q" value="${esc(lq)}" placeholder="키·고객·회사·이메일 검색" style="height:32px;border:1px solid var(--line);border-radius:6px;background:var(--field);padding:0 10px"><button class="btn sm">검색</button></form></div>
+<div>${rows.map(l=>licRow(l)).join('')||'<p class="note">라이선스가 없습니다.</p>'}</div></section>`;
+  $('#fQ').onsubmit=e=>{e.preventDefault();lq=$('#q').value;showLicenses();};
+  $('#fNew').onsubmit=async e=>{e.preventDefault();try{const r=await api('/api/admin/licenses',{body:{customerName:$('#nName').value,customerCompany:$('#nCompany').value,customerPhone:$('#nPhone').value,userEmail:$('#nEmail').value,months:+$('#nMonths').value,maxIps:+$('#nIps').value,memo:$('#nMemo').value}});
+    lq='';await showLicenses();$('#newKey').innerHTML=`<div class="banner ok">발급한 키 : <b class="mono">${esc(r.key)}</b> <button class="btn sm" onclick="copyText('${esc(r.key)}')">복사</button></div>`;}catch(err){toast(err.message,4000);}};
+  V().querySelectorAll('details.lic').forEach(d=>d.addEventListener('toggle',()=>{d.open?openLic.add(d.dataset.id):openLic.delete(d.dataset.id);}));
+  V().querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>licAct(b));}
+function licRow(l){return `<details class="lic" data-id="${l.id}" ${openLic.has(String(l.id))?'open':''}><summary><span class="mono">${esc(l.license_key)}</span><span><b>${esc(l.customer_name||'-')}</b> ${esc(l.customer_company)}<br><span class="note">${esc(l.email||'회원 미연결')}</span></span><span>${esc(l.starts_at)} ~ ${esc(l.expires_at)}<br><span class="note">${esc(l.plan_name)}</span></span><span>${stPill(l,TODAY)}</span><span class="pill">IP ${l.ips.length}/${l.max_ips}</span></summary>
+<div class="body">
+<div class="grid3">
+<label class="fld"><span>고객명</span><input data-f="customerName" value="${esc(l.customer_name)}"></label><label class="fld"><span>회사명</span><input data-f="customerCompany" value="${esc(l.customer_company)}"></label><label class="fld"><span>연락처</span><input data-f="customerPhone" value="${esc(l.customer_phone)}"></label>
+<label class="fld"><span>시작일</span><input type="date" data-f="startsAt" value="${esc(l.starts_at)}"></label><label class="fld"><span>만료일 (그날까지 사용)</span><input type="date" data-f="expiresAt" value="${esc(l.expires_at)}"></label><label class="fld"><span>IP 최대 개수</span><input type="number" min="1" max="20" data-f="maxIps" value="${l.max_ips}"></label>
+<label class="fld"><span>이용권 이름</span><input data-f="planName" value="${esc(l.plan_name)}"></label><label class="fld" style="grid-column:span 2"><span>메모</span><input data-f="memo" value="${esc(l.memo)}"></label></div>
+<div class="row"><button class="btn sm primary" data-act="save" data-id="${l.id}">변경 저장</button><span class="note">연장 :</span>${[1,6,12].map(m=>`<button class="btn sm" data-act="extend" data-id="${l.id}" data-m="${m}">+${m}개월</button>`).join('')}
+${l.status==='active'?`<button class="btn sm danger" data-act="suspend" data-id="${l.id}">사용 정지</button>`:`<button class="btn sm" data-act="resume" data-id="${l.id}">정지 해제</button>`}
+${l.user_id?`<button class="btn sm" data-act="unbind" data-id="${l.id}">회원 연결 해제</button>`:''}<button class="btn sm danger" data-act="delete" data-id="${l.id}">삭제</button></div>
+<h3>등록 IP (${l.ips.length}/${l.max_ips})</h3>
+${l.ips.length?`<div class="tbl"><table class="t"><thead><tr><th>IP</th><th>이름</th><th>등록일</th><th>최근 사용</th><th></th></tr></thead><tbody>${l.ips.map(x=>`<tr><td class="mono">${esc(x.ip)}</td><td>${esc(x.label)}</td><td>${esc(x.created_at.slice(0,16))}</td><td>${esc((x.last_seen_at||'-').slice(0,16))}</td><td><button class="btn sm danger" data-act="ipdel" data-id="${l.id}" data-ip="${x.id}">삭제</button></td></tr>`).join('')}</tbody></table></div>`:'<p class="note">등록된 IP가 없습니다. 고객이 처음 접속할 때 직접 등록합니다.</p>'}
+<div class="row"><input data-ipnew="${l.id}" placeholder="IP 직접 추가 (예: 211.234.10.5)" class="mono" style="height:30px;border:1px solid var(--line);border-radius:6px;background:var(--field);padding:0 8px;min-width:0;flex:1;max-width:260px"><button class="btn sm" data-act="ipadd" data-id="${l.id}">IP 추가</button></div>
+</div></details>`;}
+async function licAct(b){const id=b.dataset.id;const box=b.closest('.body');try{
+  if(b.dataset.act==='save'){const body={};box.querySelectorAll('[data-f]').forEach(i=>body[i.dataset.f]=i.value);await api(`/api/admin/licenses/${id}`,{method:'PATCH',body});toast('저장했습니다');}
+  if(b.dataset.act==='extend'){const r=await api(`/api/admin/licenses/${id}/extend`,{body:{months:+b.dataset.m}});toast(`${r.expiresAt}까지 연장했습니다`);}
+  if(b.dataset.act==='suspend'){if(!confirm('이 라이선스를 정지할까요? 고객은 즉시 프로그램을 쓸 수 없게 됩니다.'))return;await api(`/api/admin/licenses/${id}`,{method:'PATCH',body:{status:'suspended'}});}
+  if(b.dataset.act==='resume')await api(`/api/admin/licenses/${id}`,{method:'PATCH',body:{status:'active'}});
+  if(b.dataset.act==='unbind'){if(!confirm('회원 연결을 해제할까요? 키는 남고, 다른 계정에서 다시 등록할 수 있게 됩니다.'))return;await api(`/api/admin/licenses/${id}/unbind`,{method:'POST'});}
+  if(b.dataset.act==='delete'){if(!confirm('라이선스를 완전히 삭제할까요? 되돌릴 수 없습니다.'))return;await api(`/api/admin/licenses/${id}`,{method:'DELETE'});}
+  if(b.dataset.act==='ipdel'){if(!confirm('이 IP를 삭제할까요? 고객이 다른 IP를 새로 등록할 수 있게 됩니다.'))return;await api(`/api/admin/licenses/${id}/ips/${b.dataset.ip}`,{method:'DELETE'});}
+  if(b.dataset.act==='ipadd'){const v=box.querySelector(`[data-ipnew="${id}"]`).value.trim();await api(`/api/admin/licenses/${id}/ips`,{body:{ip:v}});}
+  openLic.add(String(id));showLicenses();}catch(e){toast(e.message,4000);}}
+
+/* 회원 */
+let uq='';
+async function showUsers(){await badges();const rows=await api('/api/admin/users?q='+encodeURIComponent(uq));
+  V().innerHTML=`<section class="card"><div class="row" style="justify-content:space-between"><h2>회원 <span class="note">${rows.length}명</span></h2><form id="fU" class="row"><input id="uq" value="${esc(uq)}" placeholder="이메일·이름·회사 검색" style="height:32px;border:1px solid var(--line);border-radius:6px;background:var(--field);padding:0 10px"><button class="btn sm">검색</button></form></div>
+<div class="tbl"><table class="t"><thead><tr><th>가입일</th><th>회원</th><th>연락처</th><th>라이선스</th><th class="num">프로젝트</th><th>최근 로그인</th><th></th></tr></thead><tbody>
+${rows.map(u=>`<tr><td>${esc(u.created_at.slice(0,10))}</td><td><b>${esc(u.name)}</b> ${u.role==='admin'?'<span class="pill">관리자</span>':''}${u.disabled?' <span class="pill bad">중지</span>':''}<br><span class="note">${esc(u.email)} · ${esc(u.company)}</span></td><td>${esc(u.phone)}</td>
+<td>${u.license_key?`<span class="mono">${esc(u.license_key)}</span><br><span class="note">${esc(u.expires_at)}까지</span>`:'<span class="note">없음</span>'}</td><td class="num">${u.project_count}</td><td>${esc((u.last_login_at||'-').slice(0,16))}</td>
+<td style="white-space:nowrap"><button class="btn sm" data-u="pw" data-id="${u.id}">비밀번호 초기화</button> ${u.disabled?`<button class="btn sm" data-u="enable" data-id="${u.id}">사용 재개</button>`:`<button class="btn sm danger" data-u="disable" data-id="${u.id}">계정 중지</button>`}</td></tr>`).join('')}</tbody></table></div></section>`;
+  $('#fU').onsubmit=e=>{e.preventDefault();uq=$('#uq').value;showUsers();};
+  V().querySelectorAll('[data-u]').forEach(b=>b.onclick=async()=>{const id=b.dataset.id;try{
+    if(b.dataset.u==='pw'){const pw=prompt('새 임시 비밀번호 (8자 이상). 회원에게 따로 알려주세요.','');if(!pw)return;await api(`/api/admin/users/${id}`,{method:'PATCH',body:{password:pw}});toast('비밀번호를 바꿨습니다');}
+    if(b.dataset.u==='disable'){if(!confirm('이 계정의 로그인을 막을까요?'))return;await api(`/api/admin/users/${id}`,{method:'PATCH',body:{disabled:true}});}
+    if(b.dataset.u==='enable')await api(`/api/admin/users/${id}`,{method:'PATCH',body:{disabled:false}});
+    showUsers();}catch(e){toast(e.message,4000);}});}
+
+/* 설정 */
+let S=null;
+async function showSettings(){await badges();S=await api('/api/admin/settings');renderSettings();}
+function renderSettings(){V().innerHTML=`<section class="card"><h2>판매 정보</h2><div class="grid3">
+<label class="fld"><span>서비스 이름</span><input id="sBrand" value="${esc(S.brand)}"></label><label class="fld" style="grid-column:span 2"><span>문의처 (고객 화면 표시)</span><input id="sContact" value="${esc(S.contact)}" placeholder="010-0000-0000 / help@example.com"></label>
+<label class="fld"><span>은행</span><input id="sBank" value="${esc(S.bank.bank)}" placeholder="○○은행"></label><label class="fld"><span>계좌번호</span><input id="sAcct" value="${esc(S.bank.account)}"></label><label class="fld"><span>예금주</span><input id="sHolder" value="${esc(S.bank.holder)}"></label>
+<label class="fld" style="grid-column:1/-1"><span>신청 화면 안내문</span><textarea id="sNotice" rows="3">${esc(S.notice)}</textarea></label></div></section>
+<section class="card"><h2>이용권 (요금제)</h2><p class="note">코드는 영문·숫자로 정하고, 한 번 판매한 뒤에는 바꾸지 마세요. 판매 중지하면 신청 화면에서만 숨겨집니다.</p>
+<div class="tbl"><table class="t"><thead><tr><th>코드</th><th>이름</th><th>기간(개월)</th><th>가격(원)</th><th>IP 개수</th><th>판매</th><th></th></tr></thead><tbody>
+${S.plans.map((p,i)=>`<tr><td><input data-p="${i}" data-k="id" value="${esc(p.id)}" style="width:70px"></td><td><input data-p="${i}" data-k="name" value="${esc(p.name)}"></td><td><input data-p="${i}" data-k="months" type="number" value="${p.months}" style="width:70px"></td><td><input data-p="${i}" data-k="price" type="number" value="${p.price}" style="width:110px"></td><td><input data-p="${i}" data-k="maxIps" type="number" value="${p.maxIps||3}" style="width:60px"></td><td><input data-p="${i}" data-k="active" type="checkbox" ${p.active!==false?'checked':''}></td><td><button class="btn sm danger" data-pdel="${i}">삭제</button></td></tr>`).join('')}</tbody></table></div>
+<div class="row"><button class="btn sm" id="pAdd">+ 이용권 추가</button></div></section>
+<div class="row"><button class="btn primary" id="sSave">설정 저장</button></div>`;
+  V().querySelectorAll('[data-p]').forEach(i=>i.oninput=i.onchange=()=>{const p=S.plans[+i.dataset.p];p[i.dataset.k]=i.type==='checkbox'?i.checked:(i.type==='number'?+i.value:i.value);});
+  V().querySelectorAll('[data-pdel]').forEach(b=>b.onclick=()=>{S.plans.splice(+b.dataset.pdel,1);renderSettings();});
+  $('#pAdd').onclick=()=>{S.plans.push({id:'p'+(S.plans.length+1),name:'',months:12,price:0,maxIps:3,active:true});renderSettings();};
+  $('#sSave').onclick=async()=>{S.brand=$('#sBrand').value;S.contact=$('#sContact').value;S.notice=$('#sNotice').value;S.bank={bank:$('#sBank').value,account:$('#sAcct').value,holder:$('#sHolder').value};
+    try{await api('/api/admin/settings',{method:'PUT',body:S});toast('설정을 저장했습니다');$('#brand').textContent=S.brand;}catch(e){toast(e.message,4000);}};}
+
+/* 작업 기록 */
+const ACT={'order.create':'이용권 신청','order.confirm':'입금 확인','order.cancel':'신청 취소','license.create':'라이선스 발급','license.update':'라이선스 수정','license.extend':'라이선스 연장','license.unbind':'회원 연결 해제','license.delete':'라이선스 삭제','license.activate':'키 등록(고객)','license.ip.add':'IP 등록(고객)','license.ip.add.admin':'IP 추가(관리자)','license.ip.delete':'IP 삭제','user.update':'회원 수정','settings.update':'설정 변경'};
+async function showAudit(){await badges();const rows=await api('/api/admin/audit');
+  V().innerHTML=`<section class="card"><h2>작업 기록 <span class="note">최근 300건</span></h2><div class="tbl"><table class="t"><thead><tr><th>시각(UTC)</th><th>사용자</th><th>작업</th><th>내용</th><th>IP</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.created_at)}</td><td>${esc(r.email||'-')}</td><td>${esc(ACT[r.action]||r.action)}</td><td class="mono" style="max-width:360px;overflow-wrap:anywhere">${esc(r.detail)}</td><td class="mono">${esc(r.ip)}</td></tr>`).join('')}</tbody></table></div></section>`;}
+
+function show(){const f={dash:showDash,orders:showOrders,licenses:showLicenses,users:showUsers,settings:showSettings,audit:showAudit}[tab];f().catch(e=>{V().innerHTML=`<div class="banner bad">${esc(e.message)}</div>`;});}
+api('/api/public/brand').then(r=>$('#brand').textContent=r.brand).catch(()=>{});
+renderTabs();show();
+</script>
+</body></html>

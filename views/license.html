@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>내 라이선스 · 착공계 원스톱</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/static/style.css">
+</head><body>
+<header class="top">
+  <div class="brand"><span class="mark">착</span><span id="brand">착공계 원스톱</span></div>
+  <span class="sp"></span>
+  <span class="who" id="who"></span>
+  <a class="btn sm" id="toAdmin" href="/admin" hidden>관리자</a>
+  <a class="btn sm primary" id="toApp" href="/app" hidden>프로그램 열기</a>
+  <button class="btn sm" onclick="logout()">로그아웃</button>
+</header>
+<main class="wrap" id="main"><p class="note">불러오는 중…</p></main>
+<script src="/static/common.js"></script>
+<script>
+let ME=null, SHOP=null, ORDERS=[];
+async function load(){
+  try{[ME,ORDERS]=await Promise.all([api('/api/me'),api('/api/orders/mine')]);}catch(e){if(e.status===401)location.href='/login';return;}
+  try{SHOP=await api('/api/shop');}catch(_){SHOP={plans:[],bank:{}};}
+  $('#brand').textContent=SHOP.brand||'착공계 원스톱';
+  $('#who').textContent=`${ME.user.name} · ${ME.user.email}`;
+  $('#toAdmin').hidden=ME.user.role!=='admin';$('#toApp').hidden=!ME.access.ok;
+  render();}
+function statusCard(){const L=ME.license,a=ME.access;
+  if(!L)return `<section class="card"><h2>라이선스</h2><div class="banner">아직 라이선스가 없습니다. 아래에서 <b>이용권을 신청</b>하고 입금하시면, 확인 후 자동으로 발급됩니다. 받은 라이선스 키가 있으면 바로 등록하세요.</div>
+<form id="fKey" class="row"><label class="fld" style="flex:1;min-width:220px"><span>라이선스 키</span><input id="key" class="mono" placeholder="CK-XXXX-XXXX-XXXX-XXXX" autocomplete="off"></label><button class="btn primary" style="align-self:end">키 등록</button></form><p class="err" id="keyErr"></p></section>`;
+  const d=dday(L.expiresAt,ME.today);const st=L.status!=='active'?'<span class="pill bad">정지</span>':d<0?'<span class="pill bad">만료</span>':d<=30?`<span class="pill warn">D-${d}</span>`:'<span class="pill ok">사용 중</span>';
+  return `<section class="card"><div class="row" style="justify-content:space-between"><h2>라이선스</h2>${st}</div>
+${a.ok?`<div class="banner ok">이 컴퓨터(IP ${esc(ME.ip)})에서 프로그램을 사용할 수 있습니다. <a href="/app">프로그램 열기 →</a></div>`:`<div class="banner bad">${esc(a.message)}</div>`}
+<dl class="kv"><dt>라이선스 키</dt><dd class="mono">${esc(L.key)} <button class="btn sm" onclick="copyText('${esc(L.key)}')">복사</button></dd>
+<dt>이용권</dt><dd>${esc(L.plan)}</dd><dt>사용 기간</dt><dd>${esc(L.startsAt)} ~ ${esc(L.expiresAt)} ${d>=0?`(${d}일 남음)`:''}</dd>
+<dt>현재 접속 IP</dt><dd class="mono">${esc(ME.ip)}</dd></dl></section>`;}
+function ipCard(){const L=ME.license;if(!L)return '';const a=ME.access;const ips=L.ips;const here=ips.find(x=>x.ip===ME.ip);
+  return `<section class="card"><div class="row" style="justify-content:space-between"><h2>사용 IP</h2><span class="pill">${ips.length} / ${L.maxIps}개 등록</span></div>
+<p class="note">라이선스 하나로 최대 ${L.maxIps}곳(IP)에서 쓸 수 있습니다. 등록한 IP에서만 프로그램이 열립니다. 등록한 IP를 지우거나 바꾸려면 관리자에게 요청하세요.</p>
+${ips.length?`<div class="tbl"><table class="t"><thead><tr><th>IP</th><th>이름</th><th>등록일</th><th>최근 사용</th></tr></thead><tbody>${ips.map(x=>`<tr><td class="mono">${esc(x.ip)} ${x.ip===ME.ip?'<span class="pill ok">현재</span>':''}</td><td>${esc(x.label)}</td><td>${esc(x.created_at.slice(0,10))}</td><td>${esc((x.last_seen_at||'').slice(0,16))}</td></tr>`).join('')}</tbody></table></div>`:''}
+${!here?(ips.length<L.maxIps?`<form id="fIp" class="row"><label class="fld" style="flex:1;min-width:200px"><span>현재 IP(${esc(ME.ip)})의 이름</span><input id="ipLabel" placeholder="예: 본사 사무실, 현장 사무실" maxlength="40"></label><button class="btn primary" style="align-self:end">이 IP 등록</button></form>
+<p class="note">회사 사무실처럼 늘 쓰는 곳에서 등록하세요. 휴대폰 데이터·카페 와이파이처럼 IP가 자주 바뀌는 곳은 등록해도 다음에 막힐 수 있습니다.</p>`:`<div class="banner bad">등록 가능한 IP ${L.maxIps}개를 모두 썼습니다. 이 IP에서 쓰려면 관리자에게 기존 IP 삭제를 요청하세요.</div>`):''}
+</section>`;}
+function shopCard(){const plans=SHOP.plans||[];const b=SHOP.bank||{};const pend=ORDERS.filter(o=>o.status==='pending');
+  return `<section class="card"><h2>${ME.license?'이용권 연장 신청':'이용권 신청'} <span class="note" style="font-weight:400">계좌이체</span></h2>
+${ME.license?'<p class="note">연장하면 남은 기간 뒤에 이어서 늘어납니다. 기간이 이미 끝났으면 입금 확인일부터 시작합니다.</p>':''}
+${plans.length?`<form id="fOrder" style="display:grid;gap:12px"><div class="plans">${plans.map((p,i)=>`<label class="plan"><input type="radio" name="plan" value="${esc(p.id)}" ${i===0?'checked':''}><b>${esc(p.name)}</b><span class="price">${won(p.price)}원</span><span class="note">${p.months}개월 · IP ${p.maxIps||3}개</span></label>`).join('')}</div>
+${b.account?`<div class="bankbox"><span class="note">입금 계좌</span><span class="acct">${esc(b.bank)} ${esc(b.account)}</span><span>예금주 ${esc(b.holder)}</span></div>`:'<div class="banner bad">아직 입금 계좌가 등록되지 않았습니다. 판매처에 문의하세요.</div>'}
+<div class="grid2"><label class="fld"><span>입금자명 *</span><input id="dep" value="${esc(ME.user.company||ME.user.name)}" maxlength="40"></label><label class="fld"><span>사업자등록번호 (세금계산서 필요 시)</span><input id="biz" placeholder="000-00-00000" maxlength="20"></label>
+<label class="fld"><span>세금계산서 받을 이메일</span><input id="taxEmail" type="email" maxlength="120"></label><label class="fld"><span>요청사항</span><input id="omemo" maxlength="500"></label></div>
+${SHOP.notice?`<p class="note">${esc(SHOP.notice)}</p>`:''}<p class="err" id="oErr"></p>
+<div><button class="btn primary">신청하기</button></div></form>`:'<p class="note">판매 중인 이용권이 없습니다.</p>'}
+${SHOP.contact?`<p class="note">문의 : ${esc(SHOP.contact)}</p>`:''}
+${ORDERS.length?`<h3 style="margin-top:6px">신청 내역</h3><div class="tbl"><table class="t"><thead><tr><th>신청일</th><th>이용권</th><th class="num">금액</th><th>입금자명</th><th>상태</th><th></th></tr></thead><tbody>${ORDERS.map(o=>`<tr><td>${esc(o.created_at.slice(0,10))}</td><td>${esc(o.plan_name)}</td><td class="num">${won(o.amount)}원</td><td>${esc(o.depositor)}</td><td>${o.status==='pending'?'<span class="pill warn">입금 확인 대기</span>':o.status==='confirmed'?'<span class="pill ok">발급 완료</span>':'<span class="pill">취소</span>'}</td><td>${o.status==='pending'?`<button class="btn sm danger" data-cancel="${o.id}">신청 취소</button>`:''}</td></tr>`).join('')}</tbody></table></div>`:''}
+${pend.length?`<div class="banner">입금 확인 대기 중입니다. 위 계좌로 <b>${won(pend[0].amount)}원</b>을 <b>${esc(pend[0].depositor)}</b> 이름으로 입금해 주세요. 확인되면 이 화면에서 바로 라이선스가 보입니다.</div>`:''}
+</section>`;}
+function pwCard(){return `<section class="card"><h2>비밀번호 변경</h2><form id="fPw" class="grid3"><label class="fld"><span>현재 비밀번호</span><input id="pw0" type="password" autocomplete="current-password"></label><label class="fld"><span>새 비밀번호 (8자 이상)</span><input id="pw1" type="password" autocomplete="new-password"></label><div style="align-self:end"><button class="btn">변경</button></div></form><p class="err" id="pwErr"></p></section>`;}
+function render(){const m=$('#main');m.innerHTML=statusCard()+ipCard()+shopCard()+pwCard();
+  const fk=$('#fKey');if(fk)fk.onsubmit=async e=>{e.preventDefault();try{await api('/api/license/activate',{body:{key:$('#key').value}});toast('라이선스를 등록했습니다');load();}catch(err){$('#keyErr').textContent=err.message;}};
+  const fi=$('#fIp');if(fi)fi.onsubmit=async e=>{e.preventDefault();try{await api('/api/license/ips',{body:{label:$('#ipLabel').value}});toast('IP를 등록했습니다');load();}catch(err){toast(err.message,4000);}};
+  const fo=$('#fOrder');if(fo)fo.onsubmit=async e=>{e.preventDefault();$('#oErr').textContent='';const plan=fo.querySelector('input[name=plan]:checked');
+    try{await api('/api/orders',{body:{planId:plan&&plan.value,depositor:$('#dep').value,bizNo:$('#biz').value,taxEmail:$('#taxEmail').value,memo:$('#omemo').value}});toast('신청했습니다. 안내된 계좌로 입금해 주세요.',4000);load();}catch(err){$('#oErr').textContent=err.message;}};
+  m.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=async()=>{if(!confirm('이 신청을 취소할까요?'))return;try{await api(`/api/orders/${b.dataset.cancel}/cancel`,{method:'POST'});load();}catch(err){toast(err.message);}});
+  $('#fPw').onsubmit=async e=>{e.preventDefault();try{await api('/api/auth/password',{body:{current:$('#pw0').value,password:$('#pw1').value}});toast('비밀번호를 바꿨습니다');$('#pw0').value=$('#pw1').value='';$('#pwErr').textContent='';}catch(err){$('#pwErr').textContent=err.message;}};}
+load();
+</script>
+</body></html>

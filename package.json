@@ -1,0 +1,20 @@
+{
+  "name": "chakgong-onestop",
+  "version": "1.0.0",
+  "description": "착공계 원스톱 — 라이선스·IP 제한·계좌이체 판매용 서버",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.7.0",
+    "cookie-parser": "^1.4.7",
+    "express": "^4.21.2"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>로그인 · 착공계 원스톱</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/static/style.css">
+</head><body>
+<div class="center"><div class="authbox card">
+  <div class="brand" style="justify-content:center;font-size:18px;margin:4px 0 2px"><span class="mark">착</span><span id="brand">착공계 원스톱</span></div>
+  <p class="note" style="text-align:center">착공계 서류를 한 번에 작성·관리하는 프로그램</p>
+  <div class="tabs" role="tablist"><button class="tab" role="tab" aria-selected="true" data-t="login">로그인</button><button class="tab" role="tab" aria-selected="false" data-t="signup">회원가입</button></div>
+
+  <form id="fLogin" class="grid" style="display:grid;gap:10px">
+    <label class="fld"><span>이메일</span><input id="lEmail" type="email" autocomplete="username" required></label>
+    <label class="fld"><span>비밀번호</span><input id="lPw" type="password" autocomplete="current-password" required></label>
+    <p class="err" id="lErr"></p>
+    <button class="btn primary" style="justify-content:center">로그인</button>
+    <p class="note">비밀번호를 잊으셨으면 판매처(관리자)에게 초기화를 요청하세요.</p>
+  </form>
+
+  <form id="fSignup" hidden style="display:grid;gap:10px">
+    <label class="fld"><span>이메일</span><input id="sEmail" type="email" autocomplete="username" required></label>
+    <label class="fld"><span>비밀번호 (8자 이상)</span><input id="sPw" type="password" autocomplete="new-password" minlength="8" required></label>
+    <div class="grid2"><label class="fld"><span>이름</span><input id="sName" required></label><label class="fld"><span>연락처</span><input id="sPhone" inputmode="tel" placeholder="010-0000-0000"></label></div>
+    <label class="fld"><span>회사명</span><input id="sCompany" placeholder="(주)○○전력"></label>
+    <label class="row note" style="align-items:flex-start;gap:8px;cursor:pointer"><input id="sAgree" type="checkbox" style="margin-top:3px">
+      <span>이용약관 및 개인정보 수집·이용(이메일, 이름, 연락처, 회사명 / 목적: 회원관리·라이선스 발급 / 보관: 회원 탈퇴 시까지)에 동의합니다.</span></label>
+    <p class="err" id="sErr"></p>
+    <button class="btn primary" style="justify-content:center">가입하고 시작하기</button>
+  </form>
+</div></div>
+<script src="/static/common.js"></script>
+<script>
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x===b));$('#fLogin').hidden=b.dataset.t!=='login';$('#fSignup').hidden=b.dataset.t!=='signup';});
+if(location.hash==='#signup')document.querySelector('[data-t="signup"]').click();
+api('/api/public/brand').then(r=>{$('#brand').textContent=r.brand;document.title='로그인 · '+r.brand;}).catch(()=>{});
+$('#fLogin').onsubmit=async e=>{e.preventDefault();$('#lErr').textContent='';
+  try{const r=await api('/api/auth/login',{body:{email:$('#lEmail').value,password:$('#lPw').value}});location.href=r.role==='admin'?'/admin':'/app';}
+  catch(err){$('#lErr').textContent=err.message;}};
+$('#fSignup').onsubmit=async e=>{e.preventDefault();$('#sErr').textContent='';
+  try{await api('/api/auth/signup',{body:{email:$('#sEmail').value,password:$('#sPw').value,name:$('#sName').value,phone:$('#sPhone').value,company:$('#sCompany').value,agree:$('#sAgree').checked}});location.href='/license';}
+  catch(err){$('#sErr').textContent=err.message;}};
+</script>
+</body></html>
