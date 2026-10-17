@@ -44,11 +44,28 @@ function addMonths(ymd, n) {
 }
 function addDays(ymd, n) { const t = new Date(ymd + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); }
 const isYmd = s => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
-function clientIp(req) {
-  let ip = req.ip || req.socket.remoteAddress || '';
+// 실제 접속자 IP 읽기
+// Render 는 Cloudflare 를 거쳐 요청이 들어오므로, Cloudflare 가 넣어주는 CF-Connecting-IP 헤더를 씁니다.
+// (req.ip 를 그대로 쓰면 접속할 때마다 바뀌는 Cloudflare 중계 서버 IP가 잡힙니다)
+// 다른 환경에서는 IP_HEADER 환경변수로 헤더 이름을 지정할 수 있습니다. 예: IP_HEADER=x-real-ip
+const IP_HEADER = String(process.env.IP_HEADER || (process.env.RENDER ? 'cf-connecting-ip' : '')).toLowerCase().trim();
+function normIp(ip) {
+  ip = String(ip || '').trim();
   if (ip.startsWith('::ffff:')) ip = ip.slice(7);
   if (ip === '::1') ip = '127.0.0.1';
   return ip;
+}
+function clientIp(req) {
+  if (IP_HEADER) {
+    const v = req.get(IP_HEADER);
+    if (v) return normIp(v.split(',')[0]);
+  }
+  if (process.env.RENDER) { // 헤더가 없을 때: X-Forwarded-For 에서 Render 중계 직전 주소
+    const parts = String(req.get('x-forwarded-for') || '').split(',').map(x => x.trim()).filter(Boolean);
+    if (parts.length >= 2) return normIp(parts[parts.length - 2]);
+    if (parts.length === 1) return normIp(parts[0]);
+  }
+  return normIp(req.ip || req.socket.remoteAddress || '');
 }
 const KEY_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function newLicenseKey() {
@@ -415,6 +432,7 @@ admin.get('/audit', (req, res) => {
   res.json(db.prepare(`SELECT a.*, u.email FROM audit_log a LEFT JOIN users u ON u.id=a.actor_id ORDER BY a.id DESC LIMIT 300`).all());
 });
 app.use('/api/admin', admin);
+app.get('/api/public/ip', (req, res) => res.json({ ip: clientIp(req), source: IP_HEADER && req.get(IP_HEADER) ? IP_HEADER : 'x-forwarded-for' }));
 app.get('/api/public/brand', (req, res) => res.json({ brand: getSettings().brand }));
 app.use('/api', (req, res) => bad(res, '없는 주소입니다.', 404));
 
