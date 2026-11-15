@@ -1,5 +1,6 @@
 // 절차적 로우폴리 메시 생성(외부 모델 없음). 좌표: 1칸 = 1 단위, y가 위쪽.
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { BuildingType } from '../engine/types';
 
 const matCache = new Map<string, THREE.MeshStandardMaterial>();
@@ -174,3 +175,35 @@ export function truckGroup(color: string): THREE.Group {
 }
 
 export const SHARED = { boxGeo, cylGeo, coneGeo, prismGeo };
+
+/** 그룹 안의 메시를 재질별로 하나로 합쳐 드로우콜을 줄임(선분 등 메시가 아닌 객체는 그대로 유지) */
+export function mergeByMaterial(g: THREE.Group): THREE.Group {
+  g.updateMatrixWorld(true);
+  const inv = new THREE.Matrix4().copy(g.matrixWorld).invert();
+  const buckets = new Map<THREE.Material, THREE.BufferGeometry[]>();
+  const keep: THREE.Object3D[] = [];
+  g.traverse((o) => {
+    if (o === g) return;
+    const m = o as THREE.Mesh;
+    if (m.isMesh && !(m as unknown as THREE.InstancedMesh).isInstancedMesh && !Array.isArray(m.material)) {
+      let geo = m.geometry.clone();
+      if (geo.index) geo = geo.toNonIndexed();
+      geo.deleteAttribute('uv');
+      geo.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, m.matrixWorld));
+      const list = buckets.get(m.material) ?? [];
+      list.push(geo);
+      buckets.set(m.material, list);
+    } else if (o.parent === g && !(o as THREE.Mesh).isMesh) keep.push(o);
+  });
+  const out = new THREE.Group();
+  for (const [material, geos] of buckets) {
+    const merged = mergeGeometries(geos, false);
+    if (!merged) continue;
+    const mesh = new THREE.Mesh(merged, material);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    out.add(mesh);
+  }
+  for (const k of keep) out.add(k);
+  return out;
+}

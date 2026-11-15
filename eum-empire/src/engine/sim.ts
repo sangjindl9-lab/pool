@@ -81,7 +81,7 @@ function placeHq(state: GameState, company: Company, index: number): void {
 export function defaultObjectives(): Objective[] {
   return [
     { id: 'profit3', kind: 'profitStreak', label: '3개월 연속 순이익 흑자', target: 3, done: false, doneDay: null },
-    { id: 'share', kind: 'marketShare', label: '빵 시장점유율 30% 달성(최근 30일)', target: 0.3, product: 'bread', done: false, doneDay: null },
+    { id: 'share', kind: 'marketShare', label: '빵 시장점유율 30% 달성(최근 30일, 도시 수요의 30% 이상이 거래되는 시장)', target: 0.3, product: 'bread', done: false, doneDay: null },
     { id: 'chain', kind: 'fullChain', label: '밀 농장 → 제분소 → 제빵공장 → 소매점 자체 공급망 완성', target: 1, done: false, doneDay: null },
     { id: 'value', kind: 'companyValue', label: '기업가치 20억원 달성', target: 2_000_000_000, done: false, doneDay: null },
   ];
@@ -173,7 +173,9 @@ export function objectiveProgress(state: GameState, o: Objective): number {
   switch (o.kind) {
     case 'profitStreak': return profitStreak(me) / o.target;
     case 'marketShare': {
+      // 30일치 기록이 있고, 시장 판매가 잠재 수요의 30% 이상일 때만 인정(독점 초기 시장 제외)
       const ms = marketShare(state, o.product!, 30);
+      if ((state.market[o.product!]?.length ?? 0) < 30 || ms.sold < ms.potential * 0.3) return Math.min(0.99, ms.sold > 0 ? (ms.byCompany[me.id] ?? 0) / ms.sold / o.target : 0);
       return ms.sold > 0 ? (ms.byCompany[me.id] ?? 0) / ms.sold / o.target : 0;
     }
     case 'fullChain': return hasFullBreadChain(state, me.id) ? 1 : 0;

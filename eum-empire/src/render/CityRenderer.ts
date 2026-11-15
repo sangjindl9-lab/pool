@@ -8,7 +8,7 @@ import { checkPlacement, isRoadIndex, partyPos } from '../engine/map';
 import { makeLocalRng } from '../engine/rng';
 import type { Building, GameState } from '../engine/types';
 import type { GameController, OverlayMode } from '../game/controller';
-import { box, buildingMesh, constructionMesh, mat, treeMesh, truckGroup } from './meshes';
+import { box, buildingMesh, constructionMesh, mat, mergeByMaterial, treeMesh, truckGroup } from './meshes';
 
 const ZONE_COLORS = ['#4a4d52', '#d9d3c7', '#a9c98f', '#b9b4a6', '#c7c48a'];
 const BUILD_HEIGHT: Record<string, number> = { store: 1.1, warehouse: 1.5, mill: 2.3, bakery: 1.4, spinning: 1.4, sewing: 1.8, wheatFarm: 0.8, cottonFarm: 0.8, hq: 3.4 };
@@ -338,7 +338,7 @@ export class CityRenderer {
       let v = this.buildingViews.get(b.id);
       if (v && v.key === key) continue;
       if (v) this.scene.remove(v.group);
-      const inner = b.status === 'active' ? buildingMesh(b.type, b.w, b.h, owner.color) : constructionMesh(b.w, b.h, BUILD_HEIGHT[b.type], progress, owner.color);
+      const inner = mergeByMaterial(b.status === 'active' ? buildingMesh(b.type, b.w, b.h, owner.color) : constructionMesh(b.w, b.h, BUILD_HEIGHT[b.type], progress, owner.color));
       const group = new THREE.Group();
       inner.rotation.y = this.facing(state, b);
       group.add(inner);
@@ -608,6 +608,7 @@ export class CityRenderer {
     this.updateGhost(state);
     this.updateCamera(dt);
     this.renderer.render(this.scene, this.camera);
+    this.ctrl.drawCalls = this.renderer.info.render.calls;
     this.frames++;
     if (t - this.fpsT > 1000) { this.fps = (this.frames * 1000) / (t - this.fpsT); this.frames = 0; this.fpsT = t; this.ctrl.fps = this.fps; }
   };

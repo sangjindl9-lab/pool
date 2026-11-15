@@ -9,7 +9,7 @@ type ExtSeed = Omit<ExternalParty, 'id' | 'stock'> & { stockRatio: number };
 export const EXTERNAL_SEEDS: ExtSeed[] = [
   { name: '한빛 곡물상사', role: 'seller', product: 'wheat', x: -5, y: 14, basePrice: 900, quality: 45, ratePerDay: 1500, maxStock: 20000, stockRatio: 0.7 },
   { name: '대륙 제분 도매', role: 'seller', product: 'flour', x: 20, y: -5, basePrice: 3500, quality: 50, ratePerDay: 600, maxStock: 8000, stockRatio: 0.7 },
-  { name: '새벽 베이커리 도매', role: 'seller', product: 'bread', x: 53, y: 18, basePrice: 1750, quality: 42, ratePerDay: 1700, maxStock: 12000, stockRatio: 0.7 },
+  { name: '새벽 베이커리 도매', role: 'seller', product: 'bread', x: 53, y: 18, basePrice: 1750, quality: 42, ratePerDay: 2200, maxStock: 15000, stockRatio: 0.7 },
   { name: '라움 제과 유통', role: 'seller', product: 'bread', x: 30, y: -5, basePrice: 2250, quality: 70, ratePerDay: 550, maxStock: 4000, stockRatio: 0.7 },
   { name: '남해 면화 수입', role: 'seller', product: 'cotton', x: 14, y: 53, basePrice: 1500, quality: 50, ratePerDay: 1200, maxStock: 15000, stockRatio: 0.7 },
   { name: '동방 섬유', role: 'seller', product: 'fabric', x: 53, y: 34, basePrice: 7000, quality: 50, ratePerDay: 300, maxStock: 4000, stockRatio: 0.7 },

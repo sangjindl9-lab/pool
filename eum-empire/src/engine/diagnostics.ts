@@ -98,7 +98,7 @@ export function diagnoseStoreProduct(state: GameState, b: Building, p: ProductId
 export function diagnoseBuilding(state: GameState, b: Building): Issue[] {
   const def = BUILDINGS[b.type];
   if (b.type === 'store') {
-    return Object.keys(b.listings).flatMap((p) => diagnoseStoreProduct(state, b, p as ProductId));
+    return Object.keys(b.listings).flatMap((p) => diagnoseStoreProduct(state, b, p as ProductId).map((i) => ({ ...i, text: `[${PRODUCTS[p as ProductId].name}] ${i.text}` })));
   }
   const out: Issue[] = [];
   if (b.status !== 'active') return out;

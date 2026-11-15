@@ -59,7 +59,7 @@ export function GameScreen() {
       <HoverTip />
       <Toasts />
       {s.gameOver && <GameOver />}
-      {ctrl.settings.showFps && <div className="fps">{ctrl.fps.toFixed(0)} FPS · 하루 처리 {ctrl.lastDayMs.toFixed(2)}ms · 건물 {s.buildings.length}</div>}
+      {ctrl.settings.showFps && <div className="fps">{ctrl.fps.toFixed(0)} FPS · 드로우콜 {ctrl.drawCalls} · 하루 처리 {ctrl.lastDayMs.toFixed(2)}ms · 건물 {s.buildings.length}</div>}
     </div>
   );
 }

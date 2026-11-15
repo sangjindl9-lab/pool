@@ -126,7 +126,11 @@ function ownSource(state: GameState, c: Company, to: Building, p: ProductId): Bu
   const producer = mine.find((b) => BUILDINGS[b.type].recipe?.output === p);
   if (producer) return producer;
   if (to.type === 'warehouse') return null;
-  const wh = mine.find((b) => b.type === 'warehouse' && supplyContracts(state, b, p).length > 0);
+  // 물류센터는 이 매장 3일치 이상 재고가 있을 때만 조달처로 사용(빈 센터로 전환해 품절되는 것 방지)
+  const need3 = Math.max(1, sumOf(to, 'demand', p) / Math.max(1, Math.min(7, to.hist.length))) * 3;
+  const wh = mine.find((b) => b.type === 'warehouse' && supplyContracts(state, b, p).length > 0 && (b.inv[p]?.qty ?? 0) >= need3);
+  const current = supplyContracts(state, to, p)[0];
+  if (!wh && current && current.seller.kind === 'building') return state.buildings.find((b) => b.id === current.seller.id) ?? null;
   return wh ?? null;
 }
 
@@ -249,9 +253,9 @@ function manageProduction(state: GameState, c: Company, prof: StrategyProfile): 
     if (b.type === 'warehouse') {
       // 물류센터: 여기서 조달받는 매장들의 필요량만큼 외부에서 대량 매입
       for (const p of CONSUMER_PRODUCTS) {
-        const outflow = state.contracts.filter((k) => k.active && k.seller.kind === 'building' && k.seller.id === b.id && k.product === p)
-          .reduce((sum, k) => sum + k.qty / k.intervalDays, 0);
-        const need = Math.max(outflow, p === 'bread' ? 150 : 20);
+        // 매입량: 자사 매장 전체의 최근 수요 합계
+        const storeDemand = myBuildings(state, c, 'store').reduce((sum, st) => sum + sumOf(st, 'demand', p) / Math.max(1, Math.min(7, st.hist.length)), 0);
+        const need = Math.max(storeDemand, p === 'bread' ? 150 : 20);
         ensureSupply(state, c, prof, b, p, need * 1.1, 6, Math.floor(def.storage / 2));
       }
       continue;

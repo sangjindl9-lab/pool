@@ -7,7 +7,7 @@ import { formatWon } from '../src/engine/money';
 import { marketShare } from '../src/engine/demand';
 import { game, build, seller, checkInvariants } from './helpers';
 
-it('playtest log', () => {
+it('밸런스 리포트: 1년 진행 + 매일 원장 불변식 검사', () => {
   const s = game(Number(process.env.SEED ?? 42));
   const store = build(s, 'store');
   applyCommand(s, 'player', { type: 'createContract', seller: { kind: 'external', id: seller(s, 'bread').id }, buyer: { kind: 'building', id: store }, product: 'bread', qty: 300, intervalDays: 2, payment: 'ship', shortage: 'partial' });
@@ -36,7 +36,7 @@ it('playtest log', () => {
 });
 
 import { ACCOUNT_LABEL } from '../src/engine/ledger';
-it('per-building P&L', () => {
+it('밸런스 리포트: 경쟁사 건물별 손익', () => {
   const s = game(Number(process.env.SEED ?? 42));
   for (let d = 0; d < Number(process.env.DAYS ?? 240); d++) advanceDay(s);
   for (const c of s.companies.filter((q) => !q.isPlayer)) {

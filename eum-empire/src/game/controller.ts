@@ -42,6 +42,7 @@ export class GameController {
   /** 성능 측정: 최근 하루 처리 시간(ms), 렌더링 FPS */
   lastDayMs = 0;
   fps = 0;
+  drawCalls = 0;
   hover: HoverInfo | null = null;
   private listeners = new Set<() => void>();
   private toastId = 1;
