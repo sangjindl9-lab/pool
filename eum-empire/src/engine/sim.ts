@@ -205,7 +205,7 @@ export const TUTORIAL_STEPS = [
   { title: '튜토리얼 완료', text: '축하합니다! 이제 매장을 늘리거나, 공장을 지어 직접 생산해 보세요. 자유 경영 모드에서는 3개 경쟁사가 함께 경쟁합니다.' },
 ];
 
-function checkTutorial(state: GameState): void {
+export function checkTutorial(state: GameState): void {
   const t = state.tutorial;
   if (!t) return;
   const me = player(state);

@@ -219,6 +219,7 @@ export interface NavTarget {
   panel: 'building' | 'supply' | 'finance' | 'market' | 'company' | 'competitors' | 'research' | 'build';
   buildingId?: number;
   product?: ProductId;
+  externalId?: number;
 }
 
 export interface NewsItem {
@@ -277,4 +278,4 @@ export interface GameState {
   gameOver: null | { day: number; won: boolean; reason: string };
 }
 
-export type Result = { ok: true; id?: number } | { ok: false; error: string };
+export type Result = { ok: true; id?: number } | { ok: false; error: string; id?: undefined };
