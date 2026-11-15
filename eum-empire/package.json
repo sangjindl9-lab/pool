@@ -1,0 +1,29 @@
+{
+  "name": "eum-business-empire-3d",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "EUM BUSINESS EMPIRE 3D — 생산·유통·판매·경쟁 경영 시뮬레이션",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "bench": "vitest run tests/perf.test.ts"
+  },
+  "dependencies": {
+    "react": "19.2.9",
+    "react-dom": "19.2.9",
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "@types/three": "0.186.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "typescript": "6.0.3",
+    "vite": "8.3.4",
+    "vitest": "5.0.5"
+  }
+}

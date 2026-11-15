@@ -1,0 +1,5 @@
+node_modules/
+dist/
+*.log
+# 상위 저장소 .gitignore의 data/ 규칙(서버 DB 폴더용)이 게임 데이터 파일을 제외하지 않도록 재포함
+!src/engine/data/
